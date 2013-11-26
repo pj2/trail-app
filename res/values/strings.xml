@@ -3,5 +3,12 @@
 
     <string name="app_name">Trail</string>
     <string name="action_settings">Settings</string>
+    <string name="action_comment">Add comment</string>
+    <string name="action_comment_fail">Unable to send comment, try again later</string>
+    <string name="http_success">Successfully sent to the server.</string>
+    <string name="http_fail_404">Unable to contact server. Please check your internet connection and try again.</string>
+    <string name="http_fail_400">Your message wasn\'t understood by the server. Please try again.</string>
+    <string name="http_fail_generic">The server is experiencing problems. Please try again later.</string>
+    <string name="comment_add_success">Your comment was added succesfully.</string>
 
 </resources>

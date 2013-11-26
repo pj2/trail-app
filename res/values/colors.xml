@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="out_of_bounds_fill">#76A0A0A0</color>
+    <color name="route_color">#FF86B1DE</color>
+    
+</resources>
