@@ -1,33 +1,29 @@
 package uk.co.prenderj.trail.activity;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
+import uk.co.prenderj.trail.CommentManager;
 import uk.co.prenderj.trail.LocationTracker;
-import uk.co.prenderj.trail.db.DataSource;
-import uk.co.prenderj.trail.model.Comment;
-import uk.co.prenderj.trail.net.CommentResponse;
 import uk.co.prenderj.trail.net.WebClient;
 import uk.co.prenderj.trail.ui.MapController;
-import uk.co.prenderj.trail.ui.marker.CommentMarker;
-import uk.co.prenderj.trail.util.Callback;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+
 import uk.co.prenderj.trail.R;
 
 import android.os.Bundle;
 import android.app.Activity;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Toast;
+import android.content.Intent;
 
 /**
  * The main map activity.
@@ -35,31 +31,26 @@ import android.widget.Toast;
  */
 public class MainActivity extends Activity {
     private static final String TAG = "MainActivity";
+    private static MainActivity instance;
     private MapController map;
     private LocationTracker tracker;
     private WebClient client;
-    private DataSource dataSource;
-
-    protected void checkPlayServices() {
-        // TODO Display prompt to download Services
-        int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
-        Log.i(TAG, "GPlayServices: status = " + status + ", success = " + (status == ConnectionResult.SUCCESS));
-    }
+    private CommentManager commentManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        instance = this;
         super.onCreate(savedInstanceState);
 
         checkPlayServices();
 
         // Enable fullscreen mode
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        // requestWindowFeature(Window.FEATURE_NO_TITLE);
+        // getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_main);
         
         // Start all the services and managers
-        dataSource = new DataSource();
         tracker = new LocationTracker(this);
 
         GoogleMap gmap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
@@ -70,13 +61,16 @@ public class MainActivity extends Activity {
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
+        
+        commentManager = new CommentManager(map, tracker, client);
+        commentManager.loadComments(this);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present
         getMenuInflater().inflate(R.menu.main, menu);
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -89,32 +83,49 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
         tracker.disconnect(); // Disconnect to save battery
-        // TODO Shutdown database
+    }
+    
+    @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+        switch (item.getItemId()) {
+        case R.id.add_comment:
+            startAddCommentActivity();
+            return true;
+        default:
+            return super.onMenuItemSelected(featureId, item);
+        }
+    }
+    
+    /**
+     * Starts the comment add form when the action is pressed.
+     */
+    protected void startAddCommentActivity() {
+        startActivity(new Intent(this, AddCommentActivity.class));
+    }
+    
+    protected void checkPlayServices() {
+        // TODO Display prompt to download Services
+        int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+        Log.i(TAG, "GPlayServices: status = " + status + ", success = " + (status == ConnectionResult.SUCCESS));
+    }
+    
+    public MapController getMap() {
+        return map;
     }
 
-    /**
-     * Attempts to share a comment and place it on the map.
-     */
-    public void onComment() {
-        // TODO Move this to separate manager class
-        // Store the comment with the server before adding it to the local map
-        String body = new Date().toString(); // TODO This is a temporary test value
-        new Callback<CommentResponse>(client.registerComment(tracker.getLastLatLng(), body), client.getDefaultTimeoutMillis(), TimeUnit.MILLISECONDS) {
-            @Override
-            public void onGet(CommentResponse resp) throws IllegalStateException, IOException {
-                if (resp.isSuccess()) {
-                    Comment comment = resp.getSingleComment();
-                    dataSource.insertComments(comment);
-                    map.addMarker(new CommentMarker(comment)); // TODO Move to UI thread
-                }
-                Toast.makeText(getApplication(), resp.getStatusMessageResource(), Toast.LENGTH_LONG).show();
-            }
+    public LocationTracker getTracker() {
+        return tracker;
+    }
 
-            @Override
-            public void onFailure(Exception e) {
-                // Something really bad happened before even sending
-                Toast.makeText(getApplication(), R.string.action_comment_fail, Toast.LENGTH_LONG).show();
-            }
-        }.start();
+    public WebClient getClient() {
+        return client;
+    }
+
+    public CommentManager getCommentManager() {
+        return commentManager;
+    }
+
+    public static MainActivity instance() {
+        return instance;
     }
 }

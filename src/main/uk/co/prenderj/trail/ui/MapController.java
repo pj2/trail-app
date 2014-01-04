@@ -7,8 +7,12 @@ import java.util.List;
 import android.content.res.Resources;
 import android.util.Log;
 
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.CancelableCallback;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -60,15 +64,18 @@ public class MapController {
 
         // Disable UI components
         UiSettings ui = gmap.getUiSettings();
+        ui.setAllGesturesEnabled(false);
         ui.setMyLocationButtonEnabled(false);
-        ui.setZoomControlsEnabled(false);
         ui.setCompassEnabled(true);
 
         // Add overlays
         gmap.addPolygon(createBoundary(getMapBounds()));
         overlay.attach(gmap);
+        
+        // Center on Lancaster
+        moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(54.0103d, 2.78613d), 12));
 
-        gmap.setOnCameraChangeListener(camera);
+        gmap.setOnMyLocationChangeListener(camera);
     }
 
     protected PolygonOptions createBoundary(LatLngBounds bounds) {
@@ -92,7 +99,7 @@ public class MapController {
     }
 
     /**
-     * Places a marker on the map. This does not register it with the database.
+     * Places a marker on the map.
      * @param markable the markable object
      */
     public Marker addMarker(Markable markable) {
@@ -108,7 +115,23 @@ public class MapController {
         return new LatLngBounds(new LatLng(54.00497d, -2.79156d), new LatLng(54.01412d, -2.78070d));
     }
 
-    public GoogleMap getGmap() {
-        return gmap;
+    public final void animateCamera(CameraUpdate update, CancelableCallback callback) {
+        gmap.animateCamera(update, callback);
+    }
+
+    public final void animateCamera(CameraUpdate update, int durationMs, CancelableCallback callback) {
+        gmap.animateCamera(update, durationMs, callback);
+    }
+
+    public final void animateCamera(CameraUpdate update) {
+        gmap.animateCamera(update);
+    }
+
+    public final CameraPosition getCameraPosition() {
+        return gmap.getCameraPosition();
+    }
+
+    public final void moveCamera(CameraUpdate update) {
+        gmap.moveCamera(update);
     }
 }

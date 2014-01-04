@@ -10,5 +10,12 @@
     <string name="http_fail_400">Your message wasn\'t understood by the server. Please try again.</string>
     <string name="http_fail_generic">The server is experiencing problems. Please try again later.</string>
     <string name="comment_add_success">Your comment was added succesfully.</string>
+    <string name="title_activity_add_comment">AddCommentActivity</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="comment">Comment</string>
+    <string name="submit">Submit</string>
+    <string name="add_comment">Add comment</string>
+    <string name="add">Add</string>
+    <string name="fail_generic">The application failed unexpectedly.</string>
 
 </resources>

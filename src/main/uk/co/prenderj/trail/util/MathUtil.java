@@ -6,12 +6,9 @@ import com.google.android.gms.maps.model.LatLngBounds;
 public class MathUtil {
     /**
      * Ensures that a LatLng is contained within the given bounds.
-     * @param latLng
-     * the LatLng
-     * @param bounds
-     * the clamp bounds
-     * @param margin
-     * the minimum distance to be kept from a horizontal or vertical edge
+     * @param latLng the LatLng
+     * @param bounds the clamp bounds
+     * @param margin the minimum distance to be kept from a horizontal or vertical edge
      * @return a new adjusted LatLng if position was altered. Otherwise, the supplied LatLng instance
      */
     public static LatLng clampPosition(LatLng latLng, LatLngBounds bounds, double margin) {
@@ -36,10 +33,8 @@ public class MathUtil {
 
     /**
      * Ensures that a LatLng is contained within the given bounds.
-     * @param latLng
-     * the LatLng
-     * @param bounds
-     * the clamp bounds
+     * @param latLng the LatLng
+     * @param bounds the clamp bounds
      * @return a new adjusted LatLng if position was altered. Otherwise, the supplied LatLng instance
      */
     public static LatLng clampPosition(LatLng latLng, LatLngBounds bounds) {
