@@ -5,8 +5,7 @@ import org.apache.http.NameValuePair;
 /**
  * A generic key-value pair.
  * @author Joshua Prendergast
- * @param <T>
- * the value type
+ * @param <T> the value type
  */
 public class Pair<T> implements NameValuePair {
     private String name;

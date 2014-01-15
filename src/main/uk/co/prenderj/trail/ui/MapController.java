@@ -1,10 +1,8 @@
 package uk.co.prenderj.trail.ui;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.content.res.Resources;
 import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdate;
@@ -17,10 +15,14 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
+
+import uk.co.prenderj.trail.LocationTracker;
 import uk.co.prenderj.trail.R;
+import uk.co.prenderj.trail.event.LocationChangedEvent;
 import uk.co.prenderj.trail.ui.marker.Markable;
 
 import com.google.android.gms.maps.model.Marker;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Maintains and controls the main MapView.
@@ -28,32 +30,29 @@ import com.google.android.gms.maps.model.Marker;
  */
 public class MapController {
     private static final String TAG = "MapController";
-
+    private static final LatLng LANCASTER_UNIVERSITY = new LatLng(54.0100d, -2.78613d);
+    
     private final GoogleMap gmap;
-    private final MapStyle style;
-    private RouteOverlay overlay;
-    private CameraListener camera = new CameraListener(this);
+    private final MapOptions options;
 
     /**
      * Creates a new controller using the default settings in resources.
-     * @param gmap
-     * the GoogleMap to control
-     * @param res
-     * the application resources
+     * @param gmap the GoogleMap to control
+     * @param res the application resources
      */
-    public MapController(GoogleMap gmap, Resources res) {
+    public MapController(GoogleMap gmap, MapOptions options) {
         if (gmap == null) {
             throw new IllegalStateException("Null GoogleMap"); // May happen if GServices are missing
         }
 
         this.gmap = gmap;
-        this.style = new MapStyle(res);
-        try {
-            this.overlay = new RouteOverlay(res.getXml(R.xml.test_route_1));
-        } catch (IOException e) {
-            Log.e(TAG, "Failed to load default route", e);
-        }
+        this.options = options; // TODO Move from constructor into separate method
         setupMap();
+    }
+    
+    @Subscribe
+    public void onLocationChanged(LocationChangedEvent event) {
+        gmap.moveCamera(CameraUpdateFactory.newLatLng(event.asLatLng())); // Follow position
     }
 
     /**
@@ -66,16 +65,14 @@ public class MapController {
         UiSettings ui = gmap.getUiSettings();
         ui.setAllGesturesEnabled(false);
         ui.setMyLocationButtonEnabled(false);
-        ui.setCompassEnabled(true);
+        ui.setZoomControlsEnabled(false);
 
         // Add overlays
         gmap.addPolygon(createBoundary(getMapBounds()));
-        overlay.attach(gmap);
+        options.route.attach(gmap);
         
         // Center on Lancaster
-        moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(54.0103d, 2.78613d), 12));
-
-        gmap.setOnMyLocationChangeListener(camera);
+        moveCamera(CameraUpdateFactory.newLatLngZoom(LANCASTER_UNIVERSITY, getStartZoom()));
     }
 
     protected PolygonOptions createBoundary(LatLngBounds bounds) {
@@ -93,7 +90,7 @@ public class MapController {
         opt.addHole(hole);
 
         // Set display options
-        opt.fillColor(style.outOfBoundsFill);
+        opt.fillColor(options.colorOutOfBounds);
         opt.strokeWidth(0.0f);
         return opt;
     }
@@ -102,13 +99,15 @@ public class MapController {
      * Places a marker on the map.
      * @param markable the markable object
      */
-    public Marker addMarker(Markable markable) {
+    public Marker addMarkable(Markable markable) {
         MarkerOptions opt = new MarkerOptions();
-        return gmap.addMarker(markable.mark(opt)); // Allow object to adjust marker
+        markable.mark(opt); // Allow object to adjust marker
+        Log.v(TAG, String.format("Adding marker: pos = %s, title = %s", opt.getPosition(), opt.getTitle()));
+        return gmap.addMarker(opt); 
     }
 
     public int getStartZoom() {
-        return 14;
+        return 15;
     }
 
     public LatLngBounds getMapBounds() {

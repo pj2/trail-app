@@ -17,6 +17,6 @@ public class CommentMarker implements Markable {
     
     @Override
     public MarkerOptions mark(MarkerOptions opt) {
-        return opt.position(comment.location);
+        return opt.position(comment.location).title(comment.title).snippet(comment.body);
     }
 }

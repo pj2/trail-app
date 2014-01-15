@@ -17,11 +17,11 @@ import android.util.Log;
  * An overlay which reads and displays GPX-formatted data.
  * @author Joshua Prendergast
  */
-public class RouteOverlay {
-    private static final String TAG = "RouteOverlay";
+public class Route {
+    private static final String TAG = "Route";
     private PolylineOptions opt;
 
-    public RouteOverlay(XmlResourceParser gpx) throws IOException {
+    public Route(XmlResourceParser gpx) throws IOException {
         load(gpx);
     }
 
@@ -49,7 +49,7 @@ public class RouteOverlay {
             }
         } catch (XmlPullParserException e) {
             Log.e(TAG, "XML parser exception", e);
-            throw new IllegalStateException(e);
+            throw new RuntimeException(e);
         } finally {
             gpx.close();
         }

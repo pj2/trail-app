@@ -1,81 +1,71 @@
 package uk.co.prenderj.trail;
 
-import android.content.Context;
+import uk.co.prenderj.trail.event.LocationChangedEvent;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Looper;
-import android.os.SystemClock;
+import android.util.Log;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks;
-import com.google.android.gms.common.GooglePlayServicesClient.OnConnectionFailedListener;
-import com.google.android.gms.location.LocationClient;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.common.eventbus.EventBus;
 
 /**
- * Gathers location data at least every 10 seconds.
+ * Gathers GPS location data every 5 seconds.
  * @author Joshua Prendergast
  */
-public class LocationTracker implements LocationListener, ConnectionCallbacks, OnConnectionFailedListener {
-    private LocationClient client;
+public class LocationTracker implements LocationListener {
+    private static final String TAG = "LocationTracker";
+    private EventBus eventBus = new EventBus(TAG);
+    private LocationManager locationManager;
     private Location lastLocation;
-    private long lastUpdate;
 
-    public LocationTracker(LocationClient client) {
-        initialize(client);
+    public LocationTracker(LocationManager locationManager) {
+        this.locationManager = locationManager;
+    }
+    
+    @Override
+    public void onLocationChanged(Location loc) {
+        lastLocation = loc;
+        eventBus.post(new LocationChangedEvent(loc));
+    }
+    
+    @Override
+    public void onProviderDisabled(String provider) {
+        if (provider == LocationManager.GPS_PROVIDER) {
+            Log.e(TAG, "GPS disabled!");
+        }
     }
 
-    public LocationTracker(Context ctx) {
-        initialize(new LocationClient(ctx, this, this));
+    @Override
+    public void onProviderEnabled(String provider) {
     }
 
-    private void initialize(LocationClient client) {
-        this.client = client;
-        connect();
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
     }
-
-    protected LocationRequest createLocationRequest() {
-        return new LocationRequest().setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY).setFastestInterval(500).setInterval(10000);
-    }
-
+    
     public void connect() {
-        client.connect();
+        lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, this);
     }
 
     public void disconnect() {
-        client.disconnect();
+        locationManager.removeUpdates(this);
+    }
+    
+    public boolean isGpsEnabled() {
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
+    
+    public void registerListener(Object o) {
+        eventBus.register(o);
     }
 
-    @Override
-    public void onConnected(Bundle bundle) {
-        setCurrentLocation(client.getLastLocation());
-        client.requestLocationUpdates(createLocationRequest(), LocationTracker.this, Looper.getMainLooper()); // Start listening to updates
-    }
-
-    @Override
-    public void onDisconnected() {
-        client.removeLocationUpdates(LocationTracker.this); // Halt updates
-    }
-
-    @Override
-    public void onLocationChanged(Location loc) {
-        setCurrentLocation(loc);
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult res) {
-        // TODO Handle
-    }
-
-    public void setCurrentLocation(Location loc) {
-        lastLocation = loc;
-        lastUpdate = SystemClock.uptimeMillis();
-    }
-
-    public LocationClient getLocationClient() {
-        return client;
+    public LocationManager getLocationManager() {
+        return locationManager;
     }
 
     public Location getLastLocation() {
@@ -85,9 +75,5 @@ public class LocationTracker implements LocationListener, ConnectionCallbacks, O
     public LatLng getLastLatLng() {
         Location loc = getLastLocation();
         return new LatLng(loc.getLatitude(), loc.getLongitude());
-    }
-
-    public long getLastUpdate() {
-        return lastUpdate;
     }
 }

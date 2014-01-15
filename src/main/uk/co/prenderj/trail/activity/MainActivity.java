@@ -1,13 +1,16 @@
 package uk.co.prenderj.trail.activity;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
 
-import uk.co.prenderj.trail.CommentManager;
+import uk.co.prenderj.trail.CommentTasks;
 import uk.co.prenderj.trail.LocationTracker;
 import uk.co.prenderj.trail.net.WebClient;
 import uk.co.prenderj.trail.ui.MapController;
+import uk.co.prenderj.trail.ui.MapOptions;
+import uk.co.prenderj.trail.ui.Route;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -15,15 +18,19 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 
 import uk.co.prenderj.trail.R;
-
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.provider.Settings;
 import android.app.Activity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 import android.content.Intent;
+import android.content.res.Resources.NotFoundException;
 
 /**
  * The main map activity.
@@ -31,39 +38,43 @@ import android.content.Intent;
  */
 public class MainActivity extends Activity {
     private static final String TAG = "MainActivity";
-    private static MainActivity instance;
+    private static MainActivity instance; // TODO Find a way to replace this
     private MapController map;
     private LocationTracker tracker;
     private WebClient client;
-    private CommentManager commentManager;
+    private CommentTasks commentTasks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         instance = this;
         super.onCreate(savedInstanceState);
 
-        checkPlayServices();
-
-        // Enable fullscreen mode
-        // requestWindowFeature(Window.FEATURE_NO_TITLE);
-        // getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
-        setContentView(R.layout.activity_main);
-        
         // Start all the services and managers
-        tracker = new LocationTracker(this);
+        tracker = new LocationTracker((LocationManager) getSystemService(LOCATION_SERVICE));
+        
+        if (tracker.isGpsEnabled()) {
+            tracker.connect();
+        } else {
+            // Ask the user to activate GPS and exit
+            Toast.makeText(this, R.string.activate_gps, Toast.LENGTH_LONG).show();
+            startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+            finish();
+        }
+        
+        setContentView(R.layout.activity_main);
 
         GoogleMap gmap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
-        map = new MapController(gmap, getResources());
+        map = new MapController(gmap, createMapOptions());
+        tracker.registerListener(map);
 
         try {
-            client = new WebClient(new URL("http://prenderj.co.uk:8080"));
+            client = new WebClient(new URL(getResources().getString(R.string.server_host)));
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
         
-        commentManager = new CommentManager(map, tracker, client);
-        commentManager.loadComments(this);
+        commentTasks = new CommentTasks(map, client);
+        commentTasks.loadNearbyComments(tracker.getLastLatLng());
     }
 
     @Override
@@ -74,15 +85,20 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onResume() {
+        super.onResume();
+        
+        checkPlayServices();
+        
         tracker.connect();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        tracker.disconnect(); // Disconnect to save battery
+        
+        // Turn off some components to save battery
+        tracker.disconnect();
     }
     
     @Override
@@ -104,16 +120,29 @@ public class MainActivity extends Activity {
     }
     
     protected void checkPlayServices() {
+        // TODO Move
         // TODO Display prompt to download Services
         int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
         Log.i(TAG, "GPlayServices: status = " + status + ", success = " + (status == ConnectionResult.SUCCESS));
+    }
+    
+    protected MapOptions createMapOptions() {
+        try {
+            return new MapOptions(R.color.out_of_bounds_fill, R.color.route_color, new Route(getResources().getXml(R.xml.test_route_1)));
+        } catch (NotFoundException e) {
+            Log.e(TAG, "Couldn't find default route", e);
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to load default route", e);
+            throw new RuntimeException(e);
+        }
     }
     
     public MapController getMap() {
         return map;
     }
 
-    public LocationTracker getTracker() {
+    public LocationTracker getLocationTracker() {
         return tracker;
     }
 
@@ -121,10 +150,10 @@ public class MainActivity extends Activity {
         return client;
     }
 
-    public CommentManager getCommentManager() {
-        return commentManager;
+    public CommentTasks getCommentManager() {
+        return commentTasks;
     }
-
+    
     public static MainActivity instance() {
         return instance;
     }

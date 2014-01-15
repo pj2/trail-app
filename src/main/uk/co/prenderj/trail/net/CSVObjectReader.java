@@ -5,7 +5,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.Reader;
 
-import uk.co.prenderj.trailshared.function.Transformer;
+import com.google.common.base.Function;
 
 
 import au.com.bytecode.opencsv.CSVReader;
@@ -21,10 +21,10 @@ public class CSVObjectReader<T> implements Closeable {
         this(reader, 256);
     }
 
-    public T readObject(Transformer<String[], T> adapter) throws IOException {
+    public T readObject(Function<String[], T> adapter) throws IOException {
         try {
             String[] next = reader.readNext();
-            return next == null ? null : adapter.call(next);
+            return next == null ? null : adapter.apply(next);
         } catch (Exception e) {
             throw new IOException(e);
         }

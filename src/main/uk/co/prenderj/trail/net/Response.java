@@ -27,21 +27,6 @@ public class Response {
         return getStatusCode() >= 200 && getStatusCode() < 300;
     }
     
-    public int getStatusMessageResource() {
-        if (isSuccess()) {
-            return R.string.http_success;
-        } else {
-            switch (getStatusCode()) {
-            case 400:
-                return R.string.http_fail_400; // This should be validated client-side
-            case 404:
-                return R.string.http_fail_404;
-            default:
-                return R.string.http_fail_generic;
-            }
-        }
-    }
-    
     public int getStatusCode() {
         return getStatusLine().getStatusCode();
     }

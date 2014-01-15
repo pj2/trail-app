@@ -2,31 +2,46 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="top"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".AddCommentActivity" >
 
-    <EditText
-        android:id="@+id/editText1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="@string/comment"
-        android:inputType="textMultiLine" >
-
-        <requestFocus />
-    </EditText>
-
     <Button
         android:id="@+id/button1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/editText1"
+        android:layout_alignLeft="@+id/comment_body_field"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:onClick="submit"
         android:text="@string/submit" />
+
+    <EditText
+        android:id="@+id/comment_title_field"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/comment_body_field"
+        android:layout_alignParentTop="true"
+        android:layout_alignRight="@+id/comment_body_field"
+        android:ems="10"
+        android:hint="@string/title" >
+
+        <requestFocus />
+    </EditText>
+
+    <EditText
+        android:id="@+id/comment_body_field"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/button1"
+        android:layout_below="@+id/comment_title_field"
+        android:layout_centerHorizontal="false"
+        android:ems="10"
+        android:hint="@string/comment"
+        android:inputType="textMultiLine"
+        android:gravity="top|left" />
 
 </RelativeLayout>
