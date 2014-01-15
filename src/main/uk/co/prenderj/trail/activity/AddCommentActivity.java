@@ -9,7 +9,7 @@ import android.view.View;
 import android.widget.EditText;
 
 public class AddCommentActivity extends Activity {
-	private EditText title;
+    private EditText title;
     private EditText body;
     
     @Override
@@ -24,14 +24,14 @@ public class AddCommentActivity extends Activity {
         title = (EditText) findViewById(R.id.comment_title_field);
         body = (EditText) findViewById(R.id.comment_body_field);
     }
-
+    
     /**
      * Set up the {@link android.app.ActionBar}.
      */
     private void setupActionBar() {
         getActionBar().setDisplayShowHomeEnabled(true);
     }
-
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -40,9 +40,7 @@ public class AddCommentActivity extends Activity {
     }
     
     public void submit(View view) {
-        CommentParams params = new CommentParams(MainActivity.instance().getLocationTracker().getLastLatLng(),
-                title.getText().toString(),
-                body.getText().toString());
+        CommentParams params = new CommentParams(MainActivity.instance().getLocationTracker().getLastLatLng(), title.getText().toString(), body.getText().toString());
         MainActivity.instance().getCommentManager().addComment(params);
         finish();
     }

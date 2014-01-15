@@ -16,8 +16,6 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
 
-import uk.co.prenderj.trail.LocationTracker;
-import uk.co.prenderj.trail.R;
 import uk.co.prenderj.trail.event.LocationChangedEvent;
 import uk.co.prenderj.trail.ui.marker.Markable;
 
@@ -34,7 +32,7 @@ public class MapController {
     
     private final GoogleMap gmap;
     private final MapOptions options;
-
+    
     /**
      * Creates a new controller using the default settings in resources.
      * @param gmap the GoogleMap to control
@@ -44,7 +42,7 @@ public class MapController {
         if (gmap == null) {
             throw new IllegalStateException("Null GoogleMap"); // May happen if GServices are missing
         }
-
+        
         this.gmap = gmap;
         this.options = options; // TODO Move from constructor into separate method
         setupMap();
@@ -54,19 +52,19 @@ public class MapController {
     public void onLocationChanged(LocationChangedEvent event) {
         gmap.moveCamera(CameraUpdateFactory.newLatLng(event.asLatLng())); // Follow position
     }
-
+    
     /**
      * Sets the MapView's initial properties.
      */
     protected void setupMap() {
         gmap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-
+        
         // Disable UI components
         UiSettings ui = gmap.getUiSettings();
         ui.setAllGesturesEnabled(false);
         ui.setMyLocationButtonEnabled(false);
         ui.setZoomControlsEnabled(false);
-
+        
         // Add overlays
         gmap.addPolygon(createBoundary(getMapBounds()));
         options.route.attach(gmap);
@@ -74,13 +72,13 @@ public class MapController {
         // Center on Lancaster
         moveCamera(CameraUpdateFactory.newLatLngZoom(LANCASTER_UNIVERSITY, getStartZoom()));
     }
-
+    
     protected PolygonOptions createBoundary(LatLngBounds bounds) {
         PolygonOptions opt = new PolygonOptions();
-
+        
         // Cover the entire Earth
         opt.add(new LatLng(0.0d, 90.0d), new LatLng(180.0d, 90.0d), new LatLng(180.0d, -90.0d), new LatLng(0.0d, -90.0d));
-
+        
         // Add a hole
         List<LatLng> hole = new ArrayList<LatLng>();
         hole.add(bounds.northeast);
@@ -88,13 +86,13 @@ public class MapController {
         hole.add(bounds.southwest);
         hole.add(new LatLng(bounds.northeast.latitude, bounds.southwest.longitude));
         opt.addHole(hole);
-
+        
         // Set display options
         opt.fillColor(options.colorOutOfBounds);
         opt.strokeWidth(0.0f);
         return opt;
     }
-
+    
     /**
      * Places a marker on the map.
      * @param markable the markable object
@@ -103,33 +101,33 @@ public class MapController {
         MarkerOptions opt = new MarkerOptions();
         markable.mark(opt); // Allow object to adjust marker
         Log.v(TAG, String.format("Adding marker: pos = %s, title = %s", opt.getPosition(), opt.getTitle()));
-        return gmap.addMarker(opt); 
+        return gmap.addMarker(opt);
     }
-
+    
     public int getStartZoom() {
         return 15;
     }
-
+    
     public LatLngBounds getMapBounds() {
         return new LatLngBounds(new LatLng(54.00497d, -2.79156d), new LatLng(54.01412d, -2.78070d));
     }
-
+    
     public final void animateCamera(CameraUpdate update, CancelableCallback callback) {
         gmap.animateCamera(update, callback);
     }
-
+    
     public final void animateCamera(CameraUpdate update, int durationMs, CancelableCallback callback) {
         gmap.animateCamera(update, durationMs, callback);
     }
-
+    
     public final void animateCamera(CameraUpdate update) {
         gmap.animateCamera(update);
     }
-
+    
     public final CameraPosition getCameraPosition() {
         return gmap.getCameraPosition();
     }
-
+    
     public final void moveCamera(CameraUpdate update) {
         gmap.moveCamera(update);
     }

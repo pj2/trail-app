@@ -23,19 +23,18 @@ import android.net.http.AndroidHttpClient;
 import com.google.android.gms.maps.model.LatLng;
 
 /**
- * Helper for HTTP communication with the server. This class is
- * thread safe (tasks run sequentially).
+ * Helper for HTTP communication with the server. This class is thread safe (tasks run sequentially).
  * @author Joshua Prendergast
  */
 public class WebClient {
     private URL hostname;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     private HttpClient http = AndroidHttpClient.newInstance("Mozilla/5.0");
-
+    
     public WebClient(URL hostname) {
         this.hostname = hostname;
     }
-
+    
     /**
      * Sends a HTTP POST to /comment/add.
      * @param params the new comment parameters
@@ -45,16 +44,12 @@ public class WebClient {
         return executor.submit(new Callable<CommentResponse>() {
             @Override
             public CommentResponse call() throws Exception {
-                HttpPost post = newPostData(new URL(hostname, "/comments/"),
-                        new Pair<Double>("lat", params.position.latitude),
-                        new Pair<Double>("lng", params.position.longitude),
-                        new Pair<String>("title", params.title),
-                        new Pair<String>("body", params.body));
+                HttpPost post = newPostData(new URL(hostname, "/comments/"), new Pair<Double>("lat", params.position.latitude), new Pair<Double>("lng", params.position.longitude), new Pair<String>("title", params.title), new Pair<String>("body", params.body));
                 CommentResponse resp = new CommentResponse(http.execute(post));
                 if (!resp.isSuccess()) {
-                	throw new HttpResponseException(resp.getStatusCode(), null);
+                    throw new HttpResponseException(resp.getStatusCode(), null);
                 } else {
-                	return resp;
+                    return resp;
                 }
             }
         });
@@ -67,9 +62,9 @@ public class WebClient {
                 URI target = new URL(hostname, String.format("/nearby/%f/%f", position.latitude, position.longitude)).toURI();
                 CommentResponse resp = new CommentResponse(http.execute(new HttpGet(target)));
                 if (!resp.isSuccess()) {
-                	throw new HttpResponseException(resp.getStatusCode(), null);
+                    throw new HttpResponseException(resp.getStatusCode(), null);
                 } else {
-                	return resp;
+                    return resp;
                 }
             }
         });
@@ -83,7 +78,7 @@ public class WebClient {
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e); // This shouldn't happen
         } catch (URISyntaxException e) {
-        	throw new RuntimeException(e); // This shouldn't happen either
-		}
+            throw new RuntimeException(e); // This shouldn't happen either
+        }
     }
 }

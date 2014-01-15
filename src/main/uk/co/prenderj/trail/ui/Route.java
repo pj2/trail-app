@@ -20,18 +20,17 @@ import android.util.Log;
 public class Route {
     private static final String TAG = "Route";
     private PolylineOptions opt;
-
+    
     public Route(XmlResourceParser gpx) throws IOException {
         load(gpx);
     }
-
+    
     protected PolylineOptions createOptions() {
         return new PolylineOptions().color(R.color.route_color);
     }
-
+    
     protected void load(XmlResourceParser gpx) throws IOException {
-        if (opt != null)
-            return; // Load once
+        if (opt != null) return; // Load once
         try {
             opt = createOptions();
             int eventType = -1;
@@ -54,7 +53,7 @@ public class Route {
             gpx.close();
         }
     }
-
+    
     public void attach(GoogleMap gmap) {
         gmap.addPolyline(opt);
     }

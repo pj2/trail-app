@@ -3,8 +3,6 @@ package uk.co.prenderj.trail.activity;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Date;
-
 import uk.co.prenderj.trail.CommentTasks;
 import uk.co.prenderj.trail.LocationTracker;
 import uk.co.prenderj.trail.net.WebClient;
@@ -20,14 +18,11 @@ import com.google.android.gms.maps.MapFragment;
 import uk.co.prenderj.trail.R;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.provider.Settings;
 import android.app.Activity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Toast;
 import android.content.Intent;
 import android.content.res.Resources.NotFoundException;
@@ -43,12 +38,12 @@ public class MainActivity extends Activity {
     private LocationTracker tracker;
     private WebClient client;
     private CommentTasks commentTasks;
-
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         instance = this;
         super.onCreate(savedInstanceState);
-
+        
         // Start all the services and managers
         tracker = new LocationTracker((LocationManager) getSystemService(LOCATION_SERVICE));
         
@@ -62,11 +57,11 @@ public class MainActivity extends Activity {
         }
         
         setContentView(R.layout.activity_main);
-
+        
         GoogleMap gmap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
         map = new MapController(gmap, createMapOptions());
         tracker.registerListener(map);
-
+        
         try {
             client = new WebClient(new URL(getResources().getString(R.string.server_host)));
         } catch (MalformedURLException e) {
@@ -76,14 +71,14 @@ public class MainActivity extends Activity {
         commentTasks = new CommentTasks(map, client);
         commentTasks.loadNearbyComments(tracker.getLastLatLng());
     }
-
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present
         getMenuInflater().inflate(R.menu.main, menu);
         return super.onCreateOptionsMenu(menu);
     }
-
+    
     @Override
     protected void onResume() {
         super.onResume();
@@ -92,7 +87,7 @@ public class MainActivity extends Activity {
         
         tracker.connect();
     }
-
+    
     @Override
     protected void onPause() {
         super.onPause();
@@ -141,15 +136,15 @@ public class MainActivity extends Activity {
     public MapController getMap() {
         return map;
     }
-
+    
     public LocationTracker getLocationTracker() {
         return tracker;
     }
-
+    
     public WebClient getClient() {
         return client;
     }
-
+    
     public CommentTasks getCommentManager() {
         return commentTasks;
     }

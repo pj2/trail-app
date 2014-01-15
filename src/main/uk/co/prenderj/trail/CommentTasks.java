@@ -22,8 +22,7 @@ import uk.co.prenderj.trail.ui.marker.CommentMarker;
 import uk.co.prenderj.trail.util.CheckedAsyncTask;
 
 /**
- * Provides a top-layer to call for comment operations. All relevant subsystems
- * are updated by calls to this class.
+ * Provides a top-layer to call for comment operations. All relevant subsystems are updated by calls to this class.
  * @author Joshua Prendergast
  */
 public class CommentTasks {
@@ -32,8 +31,8 @@ public class CommentTasks {
     private WebClient client;
     
     public CommentTasks(MapController map, WebClient client) {
-         this.map = map;
-         this.client = client;
+        this.map = map;
+        this.client = client;
     }
     
     public AsyncTask<CommentParams, Void, Comment> addComment(CommentParams params) {
@@ -82,7 +81,7 @@ public class CommentTasks {
                 } finally {
                     if (reader != null) {
                         reader.close();
-                    } 
+                    }
                 }
             }
             

@@ -11,7 +11,7 @@ public class Comment {
     public final LatLng location;
     public final String title;
     public final String body;
-
+    
     public Comment(long id, LatLng location, String title, String body) {
         this.id = id;
         this.title = title;

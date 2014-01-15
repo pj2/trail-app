@@ -11,11 +11,11 @@ import uk.co.prenderj.trail.model.Comment;
 
 public class CommentResponse extends Response {
     private boolean exhausted;
-
+    
     public CommentResponse(HttpResponse resp) {
         super(resp);
     }
-
+    
     /**
      * Reads a single comment from the response's content.
      * @return the comment
@@ -32,10 +32,10 @@ public class CommentResponse extends Response {
                 reader.close();
                 // getHandle().getEntity.consumeContent();
             }
-
+            
         }
     }
-
+    
     /**
      * Gets a reader which will treat this response's content as CSV comments.
      * @return the comment reader

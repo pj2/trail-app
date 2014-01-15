@@ -10,15 +10,13 @@ import org.apache.http.ProtocolVersion;
 import org.apache.http.StatusLine;
 import org.apache.http.params.HttpParams;
 
-import uk.co.prenderj.trail.R;
-
 /**
  * Wrapper class for a HttpResponse.
  * @author Joshua Prendergast
  */
 public class Response {
     private HttpResponse httpResp;
-
+    
     public Response(HttpResponse resp) {
         this.httpResp = resp;
     }
@@ -39,47 +37,47 @@ public class Response {
     public boolean containsHeader(String name) {
         return httpResp.containsHeader(name);
     }
-
+    
     public Header[] getAllHeaders() {
         return httpResp.getAllHeaders();
     }
-
+    
     public HttpEntity getEntity() {
         return httpResp.getEntity();
     }
-
+    
     public Header getFirstHeader(String name) {
         return httpResp.getFirstHeader(name);
     }
-
+    
     public Header[] getHeaders(String name) {
         return httpResp.getHeaders(name);
     }
-
+    
     public Header getLastHeader(String name) {
         return httpResp.getLastHeader(name);
     }
-
+    
     public Locale getLocale() {
         return httpResp.getLocale();
     }
-
+    
     public HttpParams getParams() {
         return httpResp.getParams();
     }
-
+    
     public ProtocolVersion getProtocolVersion() {
         return httpResp.getProtocolVersion();
     }
-
+    
     public StatusLine getStatusLine() {
         return httpResp.getStatusLine();
     }
-
+    
     public HeaderIterator headerIterator() {
         return httpResp.headerIterator();
     }
-
+    
     public HeaderIterator headerIterator(String name) {
         return httpResp.headerIterator(name);
     }
