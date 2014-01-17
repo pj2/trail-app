@@ -39,6 +39,7 @@ public class CommentTasks {
         return new CheckedAsyncTask<CommentParams, Void, Comment>() {
             @Override
             public Comment call(CommentParams... params) throws Exception {
+                // Send comment to server
                 Future<CommentResponse> future = client.registerComment(params[0]);
                 CommentResponse resp = future.get();
                 
@@ -47,15 +48,14 @@ public class CommentTasks {
             
             @Override
             public void finish(Comment comment) throws Exception {
+                // Add to map
                 map.addMarkable(new CommentMarker(comment));
                 Toast.makeText(MainActivity.instance(), R.string.comment_add_success, Toast.LENGTH_LONG).show();
             }
             
             @Override
             public void onException(Exception thrown) {
-                Log.e(TAG, "addComment", thrown);
                 Toast.makeText(MainActivity.instance(), R.string.action_comment_fail, Toast.LENGTH_LONG).show();
-                
                 cancel(true);
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
@@ -87,7 +87,7 @@ public class CommentTasks {
             
             @Override
             public void finish(List<Comment> comments) throws Exception {
-                // TODO Check if not already added
+                // Add to map
                 for (Comment c : comments) {
                     map.addMarkable(new CommentMarker(c));
                 }
@@ -95,9 +95,7 @@ public class CommentTasks {
             
             @Override
             public void onException(Exception thrown) {
-                Log.e(TAG, "loadNearbyComments", thrown);
                 Toast.makeText(MainActivity.instance(), R.string.http_fail_generic, Toast.LENGTH_LONG).show();
-                
                 cancel(true);
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, pos);

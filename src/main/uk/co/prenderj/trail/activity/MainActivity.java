@@ -49,27 +49,26 @@ public class MainActivity extends Activity {
         
         if (tracker.isGpsEnabled()) {
             tracker.connect();
+            
+            setContentView(R.layout.activity_main);
+            
+            GoogleMap gmap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
+            map = new MapController(gmap, createMapOptions());
+            
+            try {
+                client = new WebClient(new URL(getResources().getString(R.string.server_host)));
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+            
+            commentTasks = new CommentTasks(map, client);
+            commentTasks.loadNearbyComments(tracker.getLastLatLng());
         } else {
             // Ask the user to activate GPS and exit
             Toast.makeText(this, R.string.activate_gps, Toast.LENGTH_LONG).show();
             startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
             finish();
         }
-        
-        setContentView(R.layout.activity_main);
-        
-        GoogleMap gmap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
-        map = new MapController(gmap, createMapOptions());
-        tracker.registerListener(map);
-        
-        try {
-            client = new WebClient(new URL(getResources().getString(R.string.server_host)));
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-        
-        commentTasks = new CommentTasks(map, client);
-        commentTasks.loadNearbyComments(tracker.getLastLatLng());
     }
     
     @Override

@@ -1,7 +1,9 @@
 package uk.co.prenderj.trail.ui.marker;
 
+import uk.co.prenderj.trail.R;
 import uk.co.prenderj.trail.model.Comment;
 
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 /**
@@ -17,6 +19,9 @@ public class CommentMarker implements Markable {
     
     @Override
     public MarkerOptions mark(MarkerOptions opt) {
-        return opt.position(comment.location).title(comment.title).snippet(comment.body);
+        return opt.position(comment.location)
+                .title(comment.title)
+                .snippet(comment.body)
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_chat_bubble));
     }
 }

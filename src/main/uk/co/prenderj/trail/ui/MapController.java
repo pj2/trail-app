@@ -10,12 +10,16 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.CancelableCallback;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.GroundOverlay;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
 
+import uk.co.prenderj.trail.R;
 import uk.co.prenderj.trail.event.LocationChangedEvent;
 import uk.co.prenderj.trail.ui.marker.Markable;
 
@@ -29,9 +33,11 @@ import com.google.common.eventbus.Subscribe;
 public class MapController {
     private static final String TAG = "MapController";
     private static final LatLng LANCASTER_UNIVERSITY = new LatLng(54.0100d, -2.78613d);
+    private static final LatLngBounds OVERLAY_BOUNDS = new LatLngBounds(new LatLng(53.9995857817597, -2.82505420938158), new LatLng(54.0184499984692, -2.75295643106126));
     
     private final GoogleMap gmap;
     private final MapOptions options;
+    private GroundOverlay overlay;
     
     /**
      * Creates a new controller using the default settings in resources.
@@ -48,25 +54,23 @@ public class MapController {
         setupMap();
     }
     
-    @Subscribe
-    public void onLocationChanged(LocationChangedEvent event) {
-        gmap.moveCamera(CameraUpdateFactory.newLatLng(event.asLatLng())); // Follow position
-    }
-    
     /**
      * Sets the MapView's initial properties.
      */
     protected void setupMap() {
-        gmap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        gmap.setMapType(GoogleMap.MAP_TYPE_NONE); // Hide Google tiles
         
         // Disable UI components
         UiSettings ui = gmap.getUiSettings();
-        ui.setAllGesturesEnabled(false);
-        ui.setMyLocationButtonEnabled(false);
+        ui.setAllGesturesEnabled(true);
+        ui.setMyLocationButtonEnabled(true);
         ui.setZoomControlsEnabled(false);
         
         // Add overlays
-        gmap.addPolygon(createBoundary(getMapBounds()));
+        overlay = gmap.addGroundOverlay(new GroundOverlayOptions()
+            .image(BitmapDescriptorFactory.fromResource(R.drawable.map_overlay))
+            .positionFromBounds(OVERLAY_BOUNDS));
+        
         options.route.attach(gmap);
         
         // Center on Lancaster
