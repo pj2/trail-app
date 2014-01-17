@@ -26,7 +26,7 @@ public class Route {
     }
     
     protected PolylineOptions createOptions() {
-        return new PolylineOptions().color(R.color.route_color).zIndex(1.0f);
+        return new PolylineOptions().color(R.color.route_color).zIndex(2.0f);
     }
     
     protected void load(XmlResourceParser gpx) throws IOException {

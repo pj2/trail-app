@@ -1,4 +1,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-    <item android:id="@+id/add_comment" android:showAsAction="always|withText" android:titleCondensed="@string/add" android:title="@string/add_comment" android:menuCategory="alternative" android:visible="true" android:enabled="true"></item>
+    <item android:id="@+id/add_comment" 
+        android:showAsAction="always" 
+        android:titleCondensed="@string/add" 
+        android:title="@string/add_comment"
+        android:menuCategory="alternative"
+        android:visible="true"
+        android:enabled="true"
+        android:icon="@drawable/ic_menu_content_edit"></item>
 
 </menu>

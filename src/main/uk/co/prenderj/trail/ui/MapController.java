@@ -69,27 +69,21 @@ public class MapController {
         // Add overlays
         overlay = gmap.addGroundOverlay(new GroundOverlayOptions()
             .image(BitmapDescriptorFactory.fromResource(R.drawable.map_overlay))
-            .positionFromBounds(OVERLAY_BOUNDS));
+            .positionFromBounds(OVERLAY_BOUNDS)
+            .zIndex(1.0f));
         
         options.route.attach(gmap);
+        gmap.addPolygon(createMapShade()); // Shade out of bounds areas
         
         // Center on Lancaster
         moveCamera(CameraUpdateFactory.newLatLngZoom(LANCASTER_UNIVERSITY, getStartZoom()));
     }
     
-    protected PolygonOptions createBoundary(LatLngBounds bounds) {
+    protected PolygonOptions createMapShade() {
         PolygonOptions opt = new PolygonOptions();
         
         // Cover the entire Earth
         opt.add(new LatLng(0.0d, 90.0d), new LatLng(180.0d, 90.0d), new LatLng(180.0d, -90.0d), new LatLng(0.0d, -90.0d));
-        
-        // Add a hole
-        List<LatLng> hole = new ArrayList<LatLng>();
-        hole.add(bounds.northeast);
-        hole.add(new LatLng(bounds.southwest.latitude, bounds.northeast.longitude));
-        hole.add(bounds.southwest);
-        hole.add(new LatLng(bounds.northeast.latitude, bounds.southwest.longitude));
-        opt.addHole(hole);
         
         // Set display options
         opt.fillColor(options.colorOutOfBounds);
@@ -104,6 +98,7 @@ public class MapController {
     public Marker addMarkable(Markable markable) {
         MarkerOptions opt = new MarkerOptions();
         markable.mark(opt); // Allow object to adjust marker
+        
         Log.v(TAG, String.format("Adding marker: pos = %s, title = %s", opt.getPosition(), opt.getTitle()));
         return gmap.addMarker(opt);
     }

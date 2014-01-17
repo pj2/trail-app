@@ -17,7 +17,8 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:onClick="submit"
-        android:text="@string/submit" />
+        android:text="@string/submit"
+        android:drawableLeft="@drawable/ic_accept" />
 
     <EditText
         android:id="@+id/comment_title_field"
@@ -26,8 +27,12 @@
         android:layout_alignLeft="@+id/comment_body_field"
         android:layout_alignParentTop="true"
         android:layout_alignRight="@+id/comment_body_field"
+        android:layout_marginBottom="@dimen/margin_small"
+        android:background="@color/theme_fg"
         android:ems="10"
-        android:hint="@string/title" >
+        android:hint="@string/title"
+        android:padding="@dimen/padding_large"
+        android:inputType="textCapWords" >
 
         <requestFocus />
     </EditText>
@@ -37,11 +42,47 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/button1"
-        android:layout_below="@+id/comment_title_field"
-        android:layout_centerHorizontal="false"
+        android:layout_below="@+id/buttons"
+        android:layout_centerHorizontal="true"
+        android:background="@color/theme_fg"
         android:ems="10"
+        android:gravity="top|left"
         android:hint="@string/comment"
-        android:inputType="textMultiLine"
-        android:gravity="top|left" />
+        android:inputType="textMultiLine|textCapSentences"
+        android:padding="@dimen/padding_large"/>
+
+    <LinearLayout
+        android:id="@+id/buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/comment_title_field"
+        android:layout_alignRight="@+id/comment_title_field"
+        android:layout_below="@+id/comment_title_field"
+        android:layout_marginBottom="@dimen/margin_medium"
+        android:background="@color/theme_fg"
+        android:dividerPadding="@dimen/padding_medium"
+        android:padding="@dimen/padding_medium" >
+
+        <ImageButton
+            android:id="@+id/record_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@null"
+            android:contentDescription="@string/add_recording"
+            android:onClick="recordSound"
+            android:src="@drawable/ic_device_access_mic" />
+
+        <ImageButton
+            android:id="@+id/camera_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@null"
+            android:contentDescription="@string/add_image"
+            android:onClick="takePicture"
+            android:src="@drawable/ic_device_access_camera" />
+
+    </LinearLayout>
 
 </RelativeLayout>

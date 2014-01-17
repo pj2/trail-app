@@ -44,7 +44,12 @@ public class WebClient {
         return executor.submit(new Callable<CommentResponse>() {
             @Override
             public CommentResponse call() throws Exception {
-                HttpPost post = newPostData(new URL(hostname, "/comments/"), new Pair<Double>("lat", params.position.latitude), new Pair<Double>("lng", params.position.longitude), new Pair<String>("title", params.title), new Pair<String>("body", params.body));
+                HttpPost post = newPostData(new URL(hostname, "/comments/"),
+                        new Pair<Double>("lat", params.position.latitude),
+                        new Pair<Double>("lng", params.position.longitude),
+                        new Pair<String>("title", params.title),
+                        new Pair<String>("body", params.body));
+                        // TODO Add attachment field
                 CommentResponse resp = new CommentResponse(http.execute(post));
                 if (!resp.isSuccess()) {
                     throw new HttpResponseException(resp.getStatusCode(), null);
