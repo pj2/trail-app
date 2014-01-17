@@ -3,9 +3,10 @@ package uk.co.prenderj.trail.activity;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import uk.co.prenderj.trail.CommentTasks;
+
 import uk.co.prenderj.trail.LocationTracker;
 import uk.co.prenderj.trail.net.WebClient;
+import uk.co.prenderj.trail.tasks.CommentTasks;
 import uk.co.prenderj.trail.ui.MapController;
 import uk.co.prenderj.trail.ui.MapOptions;
 import uk.co.prenderj.trail.ui.Route;
@@ -23,6 +24,7 @@ import android.app.Activity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 import android.content.Intent;
 import android.content.res.Resources.NotFoundException;
@@ -48,9 +50,9 @@ public class MainActivity extends Activity {
         tracker = new LocationTracker((LocationManager) getSystemService(LOCATION_SERVICE));
         
         if (tracker.isGpsEnabled()) {
-            tracker.connect();
-            
             setContentView(R.layout.activity_main);
+            
+            tracker.connect();
             
             GoogleMap gmap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
             map = new MapController(gmap, createMapOptions());
@@ -61,7 +63,7 @@ public class MainActivity extends Activity {
                 throw new RuntimeException(e);
             }
             
-            commentTasks = new CommentTasks(map, http);
+            commentTasks = new CommentTasks(map, http, (ProgressBar) findViewById(R.id.progressBar));
             commentTasks.loadNearbyComments(tracker.getLastLatLng());
         } else {
             // Ask the user to activate GPS and exit

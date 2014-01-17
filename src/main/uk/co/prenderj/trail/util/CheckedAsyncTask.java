@@ -7,7 +7,11 @@ public abstract class CheckedAsyncTask<Params, Progress, Result> extends AsyncTa
     
     public abstract Result call(Params... params) throws Exception;
     
-    public abstract void finish(Result result) throws Exception;
+    public abstract void postExecute(Result result) throws Exception;
+    
+    public void finish() {
+        // Override me
+    }
     
     @Override
     protected Result doInBackground(Params... params) {
@@ -25,9 +29,11 @@ public abstract class CheckedAsyncTask<Params, Progress, Result> extends AsyncTa
             onException(thrown);
         }
         try {
-            finish(result);
+            postExecute(result);
         } catch (Exception e) {
             onException(e);
+        } finally {
+            finish();
         }
     }
     

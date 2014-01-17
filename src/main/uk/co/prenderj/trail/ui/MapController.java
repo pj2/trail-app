@@ -1,8 +1,5 @@
 package uk.co.prenderj.trail.ui;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdate;
@@ -38,6 +35,7 @@ public class MapController {
     private final GoogleMap gmap;
     private final MapOptions options;
     private GroundOverlay overlay;
+    private Marker myLocation;
     
     /**
      * Creates a new controller using the default settings in resources.
@@ -59,6 +57,7 @@ public class MapController {
      */
     protected void setupMap() {
         gmap.setMapType(GoogleMap.MAP_TYPE_NONE); // Hide Google tiles
+        gmap.setMyLocationEnabled(true);
         
         // Disable UI components
         UiSettings ui = gmap.getUiSettings();
