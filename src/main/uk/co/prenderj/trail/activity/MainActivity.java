@@ -36,7 +36,7 @@ public class MainActivity extends Activity {
     private static MainActivity instance; // TODO Find a way to replace this
     private MapController map;
     private LocationTracker tracker;
-    private WebClient client;
+    private WebClient http;
     private CommentTasks commentTasks;
     
     @Override
@@ -56,12 +56,12 @@ public class MainActivity extends Activity {
             map = new MapController(gmap, createMapOptions());
             
             try {
-                client = new WebClient(new URL(getResources().getString(R.string.server_host)));
+                http = new WebClient(new URL(getResources().getString(R.string.server_host)));
             } catch (MalformedURLException e) {
                 throw new RuntimeException(e);
             }
             
-            commentTasks = new CommentTasks(map, client);
+            commentTasks = new CommentTasks(map, http);
             commentTasks.loadNearbyComments(tracker.getLastLatLng());
         } else {
             // Ask the user to activate GPS and exit
@@ -93,6 +93,13 @@ public class MainActivity extends Activity {
         
         // Turn off some components to save battery
         tracker.disconnect();
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        
+        http.close();
     }
     
     @Override
@@ -141,7 +148,7 @@ public class MainActivity extends Activity {
     }
     
     public WebClient getClient() {
-        return client;
+        return http;
     }
     
     public CommentTasks getCommentManager() {

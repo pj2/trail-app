@@ -31,3 +31,8 @@ Licensed under the MIT license.
     IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
     CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+Attribution
+--------
+Leaf logo by Asher Abbasi (http://kyo-tux.deviantart.com) for IconFinder, used under CC-ND.
+
+Some assets created using the Android Asset Studio.

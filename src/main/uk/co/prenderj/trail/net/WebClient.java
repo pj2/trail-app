@@ -29,10 +29,14 @@ import com.google.android.gms.maps.model.LatLng;
 public class WebClient {
     private URL hostname;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
-    private HttpClient http = AndroidHttpClient.newInstance("Mozilla/5.0");
+    private AndroidHttpClient http = AndroidHttpClient.newInstance("Mozilla/5.0");
     
     public WebClient(URL hostname) {
         this.hostname = hostname;
+    }
+    
+    public void close() {
+        http.close();
     }
     
     /**
