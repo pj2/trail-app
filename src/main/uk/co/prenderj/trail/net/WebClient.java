@@ -1,93 +1,126 @@
 package uk.co.prenderj.trail.net;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import uk.co.prenderj.trail.CommentParams;
-import uk.co.prenderj.trail.util.Pair;
-import android.net.http.AndroidHttpClient;
+import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+import com.google.common.io.ByteStreams;
 
 /**
- * Helper for HTTP communication with the server. This class is thread safe (tasks run sequentially).
+ * Helper for HTTP communication with the server. This class is thread safe.
  * @author Joshua Prendergast
  */
 public class WebClient {
+    private static final String TAG = "WebClient";
+    
     private URL hostname;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
-    private AndroidHttpClient http = AndroidHttpClient.newInstance("Mozilla/5.0");
+    private HttpClient http = new DefaultHttpClient(); // TODO Use async client
+    private HashFunction hashFunction = Hashing.crc32();
     
     public WebClient(URL hostname) {
         this.hostname = hostname;
     }
     
     public void close() {
-        http.close();
+        executor.shutdown();
     }
     
     /**
-     * Sends a HTTP POST to /comment/add.
+     * Creates a comment on the server.
      * @param params the new comment parameters
      * @return a Future containing the server's response
      */
-    public Future<CommentResponse> registerComment(final CommentParams params) {
+    public Future<CommentResponse> uploadComment(final CommentParams params, final File cacheDirectory) {
         return executor.submit(new Callable<CommentResponse>() {
             @Override
             public CommentResponse call() throws Exception {
-                HttpPost post = newPostData(new URL(hostname, "/comments/"),
-                        new Pair<Double>("lat", params.position.latitude),
-                        new Pair<Double>("lng", params.position.longitude),
-                        new Pair<String>("title", params.title),
-                        new Pair<String>("body", params.body));
-                        // TODO Add attachment field
-                CommentResponse resp = new CommentResponse(http.execute(post));
-                if (!resp.isSuccess()) {
-                    throw new HttpResponseException(resp.getStatusCode(), null);
-                } else {
-                    return resp;
+                HashCode boundary = hashFunction.hashLong(new Random().nextLong());
+                
+                MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+                builder.setBoundary(boundary.toString())
+                    .setCharset(Charsets.UTF_8)
+                    .setMode(HttpMultipartMode.RFC6532)
+                    .addTextBody("lat", String.valueOf(params.position.latitude), ContentType.TEXT_PLAIN)
+                    .addTextBody("lng", String.valueOf(params.position.longitude), ContentType.TEXT_PLAIN)
+                    .addTextBody("title", params.title, ContentType.TEXT_PLAIN)
+                    .addTextBody("body", params.body, ContentType.TEXT_PLAIN);
+                
+                // Add the compressed attachment if available
+                File compressed = null;
+                try {
+                    if (params.attachment != null) {
+                        compressed = params.attachment.createCompressed(cacheDirectory);
+                        builder.addBinaryBody("attachment", compressed, params.attachment.getContentType(), "attachment" + params.attachment.getFileSuffix());
+                    }
+                    
+                    // Build and send
+                    HttpPost post = new HttpPost(new URL(hostname, "/comments").toURI());
+                    post.setEntity(builder.build());
+                    
+                    CommentResponse resp = new CommentResponse(http.execute(post));
+                    if (resp.isSuccess()) {
+                        return resp;
+                    } else {
+                        throw new HttpResponseException(resp.getStatusCode(), null);
+                    }
+                } finally {
+                    if (compressed != null && !compressed.delete())
+                        Log.e(TAG, "Failed to delete cached file");
                 }
             }
         });
     }
     
-    public Future<CommentResponse> loadNearbyComments(final LatLng position) {
+    /**
+     * Downloads all nearby comments from the server.
+     * @param position the origin (i.e. the phone's location)
+     * @return a Future containing the server's response
+     */
+    public Future<CommentResponse> downloadNearbyComments(final LatLng position) {
         return executor.submit(new Callable<CommentResponse>() {
             @Override
             public CommentResponse call() throws Exception {
-                URI target = new URL(hostname, String.format("/nearby/%f/%f", position.latitude, position.longitude)).toURI();
-                CommentResponse resp = new CommentResponse(http.execute(new HttpGet(target)));
-                if (!resp.isSuccess()) {
-                    throw new HttpResponseException(resp.getStatusCode(), null);
-                } else {
+                // Contact hostname/nearby/lat/lng
+                HttpGet get = new HttpGet(new URL(hostname, String.format("/nearby/%f/%f", position.latitude, position.longitude)).toURI());
+                CommentResponse resp = new CommentResponse(http.execute(get));
+                if (resp.isSuccess()) {
                     return resp;
+                } else {
+                    throw new HttpResponseException(resp.getStatusCode(), null);
                 }
             }
         });
-    }
-    
-    public static HttpPost newPostData(URL target, Pair<?>... pairs) {
-        try {
-            HttpPost post = new HttpPost(target.toURI());
-            post.setEntity(new UrlEncodedFormEntity(Arrays.asList(pairs)));
-            return post;
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e); // This shouldn't happen
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e); // This shouldn't happen either
-        }
     }
 }

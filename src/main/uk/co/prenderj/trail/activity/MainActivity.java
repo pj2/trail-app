@@ -6,7 +6,7 @@ import java.net.URL;
 
 import uk.co.prenderj.trail.LocationTracker;
 import uk.co.prenderj.trail.net.WebClient;
-import uk.co.prenderj.trail.tasks.CommentTasks;
+import uk.co.prenderj.trail.tasks.TaskManager;
 import uk.co.prenderj.trail.ui.MapController;
 import uk.co.prenderj.trail.ui.MapOptions;
 import uk.co.prenderj.trail.ui.Route;
@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
     private MapController map;
     private LocationTracker tracker;
     private WebClient http;
-    private CommentTasks commentTasks;
+    private TaskManager taskManager;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,8 +63,8 @@ public class MainActivity extends Activity {
                 throw new RuntimeException(e);
             }
             
-            commentTasks = new CommentTasks(map, http, (ProgressBar) findViewById(R.id.progressBar));
-            commentTasks.loadNearbyComments(tracker.getLastLatLng());
+            taskManager = new TaskManager(map, http, (ProgressBar) findViewById(R.id.progressBar), getCacheDir());
+            taskManager.loadNearbyComments(tracker.getLastLatLng());
         } else {
             // Ask the user to activate GPS and exit
             Toast.makeText(this, R.string.activate_gps, Toast.LENGTH_LONG).show();
@@ -109,10 +109,12 @@ public class MainActivity extends Activity {
         switch (item.getItemId()) {
         case R.id.add_comment:
             startAddCommentActivity();
-            return true;
-        default:
-            return super.onMenuItemSelected(featureId, item);
+            break;
+        case R.id.center_on_home:
+            map.centerOnHome();
+            break;
         }
+        return super.onMenuItemSelected(featureId, item);
     }
     
     /**
@@ -153,8 +155,8 @@ public class MainActivity extends Activity {
         return http;
     }
     
-    public CommentTasks getCommentManager() {
-        return commentTasks;
+    public TaskManager getCommentManager() {
+        return taskManager;
     }
     
     public static MainActivity instance() {

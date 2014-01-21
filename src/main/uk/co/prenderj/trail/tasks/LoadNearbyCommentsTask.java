@@ -23,7 +23,7 @@ public class LoadNearbyCommentsTask extends BaseTask<LatLng, Void, List<Comment>
     private WebClient client;
     private MapController map;
     
-    public LoadNearbyCommentsTask(CommentTasks manager, WebClient client, MapController map) {
+    public LoadNearbyCommentsTask(TaskManager manager, WebClient client, MapController map) {
         super(manager);
         this.client = client;
         this.map = map;
@@ -31,9 +31,9 @@ public class LoadNearbyCommentsTask extends BaseTask<LatLng, Void, List<Comment>
     
     @Override
     public List<Comment> call(LatLng... pos) throws Exception {
-        publishProgress(null);
+        publishProgress();
         
-        Future<CommentResponse> future = client.loadNearbyComments(pos[0]);
+        Future<CommentResponse> future = client.downloadNearbyComments(pos[0]);
         CommentResponse resp = future.get();
         
         CSVObjectReader<Comment> reader = null;
@@ -63,6 +63,7 @@ public class LoadNearbyCommentsTask extends BaseTask<LatLng, Void, List<Comment>
     
     @Override
     public void onException(Exception thrown) {
+        super.onException(thrown);
         Toast.makeText(MainActivity.instance(), R.string.http_fail_generic, Toast.LENGTH_LONG).show();
     }
 }

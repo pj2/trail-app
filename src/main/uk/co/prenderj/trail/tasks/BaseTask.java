@@ -3,9 +3,9 @@ package uk.co.prenderj.trail.tasks;
 import uk.co.prenderj.trail.util.CheckedAsyncTask;
 
 public abstract class BaseTask<Params, Progress, Result> extends CheckedAsyncTask<Params, Progress, Result> {
-    private CommentTasks manager;
+    private TaskManager manager;
     
-    public BaseTask(CommentTasks manager) {
+    public BaseTask(TaskManager manager) {
         this.manager = manager;
     }
     

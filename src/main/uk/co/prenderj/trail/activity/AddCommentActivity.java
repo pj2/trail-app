@@ -2,26 +2,21 @@ package uk.co.prenderj.trail.activity;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import uk.co.prenderj.trail.CommentParams;
 import uk.co.prenderj.trail.R;
-import uk.co.prenderj.trail.net.Attachment;
-import uk.co.prenderj.trail.net.Attachment.AttachmentType;
+import uk.co.prenderj.trail.net.attachment.Attachment;
+import uk.co.prenderj.trail.net.attachment.ImageAttachment;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -31,8 +26,8 @@ public class AddCommentActivity extends Activity {
     private static final int REQUEST_AUDIO_CAPTURE = 2;
     private static final String TAG = "AddCommentActivity";
     
-    private File attachmentFile;
     private Attachment attachment;
+    private File attachmentSource;
     
     private EditText titleBox;
     private EditText bodyBox;
@@ -49,9 +44,15 @@ public class AddCommentActivity extends Activity {
         bodyBox = (EditText) findViewById(R.id.comment_body_field);
         cameraButton = ((ImageButton) findViewById(R.id.camera_button));
         
-        // Disable camera functions if needed
-        if (!canTakePhotos()) {
-            cameraButton.setEnabled(false);
+        // Disable functions as needed
+        cameraButton.setEnabled(canTakePhotos());
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if ((attachmentSource != null && !attachmentSource.delete())) {
+            Log.e(TAG, "Failed to delete unfinished file");
         }
     }
     
@@ -65,53 +66,45 @@ public class AddCommentActivity extends Activity {
     
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // XXX This can be replaced by file extension matching
-        if (resultCode == RESULT_OK) {
-            // Determine attachment type
-            AttachmentType type;
-            switch (requestCode) {
-            case REQUEST_IMAGE_CAPTURE:
-                type = AttachmentType.IMAGE;
-                break;
-            case REQUEST_AUDIO_CAPTURE:
-                type = AttachmentType.AUDIO;
-                break;
-            default:
-                Log.e(TAG, "Unknown activity result");
-                return;
-            }
-            
-            // TODO Reveal picture to other apps
-            attachment = new Attachment(attachmentFile, type);
-            Toast.makeText(this, R.string.attachment_added, Toast.LENGTH_SHORT).show();
-        }
-    }
-    
-    /**
-     * Called when the user asks to add a picture.
-     * @param view the caller
-     */
-    public void takePicture(View view) {
-        if (!canTakePhotos()) return;
+        if (resultCode != RESULT_OK) return;
         
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            try {
-                attachmentFile = createImageFile();
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(attachmentFile));
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-            } catch (IOException e) {
-                Toast.makeText(this, R.string.unable_to_write_to_sd_card, Toast.LENGTH_SHORT).show();
-            }
+        if (requestCode == REQUEST_IMAGE_CAPTURE) {
+            attachment = new ImageAttachment(attachmentSource);
+        } else {
+            // TODO Audio attachment
         }
+        attachmentSource = null; // Do not delete in onDestroy
+        Toast.makeText(this, R.string.attachment_added, Toast.LENGTH_SHORT).show();
     }
     
     /**
-     * Called when the user asks to add a recording.
+     * Called once an attachment button is pressed (record / take photo).
      * @param view the caller
      */
-    public void recordSound(View view) {
-        // TODO
+    public void addAttachment(View view) {
+        try {
+            int request;
+            Intent intent;
+            if (view.getId() == R.id.camera_button) {
+                if (!canTakePhotos()) return;
+                
+                request = REQUEST_IMAGE_CAPTURE;
+                intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                attachmentSource = ImageAttachment.createSourceFile();
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(attachmentSource));
+            } else {
+                // TODO Microphone
+                throw new IllegalStateException("Microphone not yet implemented");
+            }
+        
+            if (intent.resolveActivity(getPackageManager()) != null) { // Check there is a handling activity available
+                startActivityForResult(intent, request);
+            } else {
+                Toast.makeText(this, R.string.fail_generic, Toast.LENGTH_SHORT).show(); // TODO More specific message
+            }
+        } catch (IOException e) {
+            Toast.makeText(this, R.string.io_error, Toast.LENGTH_SHORT).show();
+        }
     }
     
     /**
@@ -125,7 +118,9 @@ public class AddCommentActivity extends Activity {
         if (title.isEmpty() || body.isEmpty()) {
             Toast.makeText(this, R.string.missing_argument, Toast.LENGTH_SHORT).show();
         } else {
+            // Ensure the attachment was written to by another activity (e.g. camera)
             CommentParams params = new CommentParams(MainActivity.instance().getLocationTracker().getLastLatLng(), title, body, attachment);
+            
             MainActivity.instance().getCommentManager().addComment(params);
             finish();
         }
@@ -135,18 +130,5 @@ public class AddCommentActivity extends Activity {
         // Check we can actually take pictures
         return getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)
                 && Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
-    }
-    
-    private File createImageFile() throws IOException {
-        // Create a unique image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-            imageFileName,  /* prefix */
-            ".jpg",         /* suffix */
-            storageDir      /* directory */
-        );
-        return image;
     }
 }

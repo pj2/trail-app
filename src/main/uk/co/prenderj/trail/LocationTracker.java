@@ -1,6 +1,7 @@
 package uk.co.prenderj.trail;
 
 import uk.co.prenderj.trail.event.LocationChangedEvent;
+import uk.co.prenderj.trail.ui.MapController;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -72,6 +73,6 @@ public class LocationTracker implements LocationListener {
     
     public LatLng getLastLatLng() {
         Location loc = getLastLocation();
-        return new LatLng(loc.getLatitude(), loc.getLongitude());
+        return loc == null ? MapController.LANCASTER_UNIVERSITY : new LatLng(loc.getLatitude(), loc.getLongitude()); // HACK
     }
 }

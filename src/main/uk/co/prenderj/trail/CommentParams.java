@@ -1,6 +1,6 @@
 package uk.co.prenderj.trail;
 
-import uk.co.prenderj.trail.net.Attachment;
+import uk.co.prenderj.trail.net.attachment.Attachment;
 
 import com.google.android.gms.maps.model.LatLng;
 

@@ -1,5 +1,6 @@
 package uk.co.prenderj.trail.tasks;
 
+import java.io.File;
 import java.util.concurrent.Future;
 
 import android.widget.Toast;
@@ -15,19 +16,21 @@ import uk.co.prenderj.trail.ui.marker.CommentMarker;
 public class AddCommentTask extends BaseTask<CommentParams, Void, Comment> {
     private WebClient client;
     private MapController map;
+    private File cacheDirectory;
     
-    public AddCommentTask(CommentTasks manager, WebClient client, MapController map) {
+    public AddCommentTask(TaskManager manager, WebClient client, MapController map, File cacheDirectory) {
         super(manager);
         this.client = client;
         this.map = map;
+        this.cacheDirectory = cacheDirectory;
     }
 
     @Override
     public Comment call(CommentParams... params) throws Exception {
-        publishProgress(null);
+        publishProgress();
         
         // Send comment to server
-        Future<CommentResponse> future = client.registerComment(params[0]);
+        Future<CommentResponse> future = client.uploadComment(params[0], cacheDirectory);
         CommentResponse resp = future.get();
         
         return resp.getSingleComment();
@@ -42,6 +45,7 @@ public class AddCommentTask extends BaseTask<CommentParams, Void, Comment> {
     
     @Override
     public void onException(Exception thrown) {
+        super.onException(thrown);
         Toast.makeText(MainActivity.instance(), R.string.action_comment_fail, Toast.LENGTH_LONG).show();
     }
 }

@@ -19,7 +19,7 @@
     <string name="add_recording">Add recording</string>
     <string name="add_image">Add image</string>
     <string name="missing_argument">Please fill in all fields</string>
-    <string name="unable_to_write_to_sd_card">Unable to write to external storage</string>
+    <string name="io_error">Problem writing to disk</string>
     <string name="attachment_added">Attachment added</string>
 
 </resources>

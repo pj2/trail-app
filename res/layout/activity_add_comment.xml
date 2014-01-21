@@ -16,9 +16,9 @@
         android:layout_alignLeft="@+id/comment_body_field"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
+        android:drawableLeft="@drawable/ic_accept"
         android:onClick="submit"
-        android:text="@string/submit"
-        android:drawableLeft="@drawable/ic_accept" />
+        android:text="@string/submit" />
 
     <EditText
         android:id="@+id/comment_title_field"
@@ -31,8 +31,8 @@
         android:background="@color/theme_fg"
         android:ems="10"
         android:hint="@string/title"
-        android:padding="@dimen/padding_large"
-        android:inputType="textCapWords" >
+        android:inputType="textCapWords"
+        android:padding="@dimen/padding_large" >
 
         <requestFocus />
     </EditText>
@@ -49,7 +49,7 @@
         android:gravity="top|left"
         android:hint="@string/comment"
         android:inputType="textMultiLine|textCapSentences"
-        android:padding="@dimen/padding_large"/>
+        android:padding="@dimen/padding_large" />
 
     <LinearLayout
         android:id="@+id/buttons"
@@ -70,7 +70,7 @@
             android:layout_weight="1"
             android:background="@null"
             android:contentDescription="@string/add_recording"
-            android:onClick="recordSound"
+            android:onClick="addAttachment"
             android:src="@drawable/ic_device_access_mic" />
 
         <ImageButton
@@ -80,9 +80,8 @@
             android:layout_weight="1"
             android:background="@null"
             android:contentDescription="@string/add_image"
-            android:onClick="takePicture"
+            android:onClick="addAttachment"
             android:src="@drawable/ic_device_access_camera" />
-
     </LinearLayout>
 
 </RelativeLayout>

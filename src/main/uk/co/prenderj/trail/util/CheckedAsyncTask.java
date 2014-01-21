@@ -1,8 +1,10 @@
 package uk.co.prenderj.trail.util;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 public abstract class CheckedAsyncTask<Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {
+    private static final String TAG = "CheckedAsyncTask";
     private Exception thrown;
     
     public abstract Result call(Params... params) throws Exception;
@@ -38,6 +40,6 @@ public abstract class CheckedAsyncTask<Params, Progress, Result> extends AsyncTa
     }
     
     public void onException(Exception thrown) {
-        cancel(true);
+        Log.e(TAG, "Exception in task", thrown);
     }
 }

@@ -1,5 +1,6 @@
 package uk.co.prenderj.trail.tasks;
 
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,21 +19,23 @@ import uk.co.prenderj.trail.ui.MapController;
  * Provides a top-layer to call for comment operations. All relevant subsystems are updated by calls to this class.
  * @author Joshua Prendergast
  */
-public class CommentTasks {
-    private static final String TAG = "CommentManager";
+public class TaskManager {
+    private static final String TAG = "TaskManager";
+    private File cacheDirectory;
     private MapController map;
     private WebClient client;
     private ProgressBar bar;
     private AtomicInteger runningTasks = new AtomicInteger();
     
-    public CommentTasks(MapController map, WebClient client, ProgressBar progressBar) {
+    public TaskManager(MapController map, WebClient client, ProgressBar progressBar, File cacheDirectory) {
         this.map = map;
         this.client = client;
         this.bar = progressBar;
+        this.cacheDirectory = cacheDirectory;
     }
     
     public AsyncTask<CommentParams, Void, Comment> addComment(CommentParams params) {
-        return startTask(new AddCommentTask(this, client, map), params);
+        return startTask(new AddCommentTask(this, client, map, cacheDirectory), params);
     }
     
     public AsyncTask<LatLng, Void, List<Comment>> loadNearbyComments(LatLng pos) {
@@ -55,7 +58,6 @@ public class CommentTasks {
      */
     protected <Params, Progress, Result> BaseTask<Params, Progress, Result> startTask(BaseTask<Params, Progress, Result> task, Params... params) {
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
-        
         runningTasks.incrementAndGet();
         return task;
     }
@@ -64,7 +66,7 @@ public class CommentTasks {
      * Called by {@link BaseTask} on completion.
      * @param task the caller
      */
-    public void taskComplete(AsyncTask<?, ?, ?> task) {
+    public void taskComplete(BaseTask<?, ?, ?> task) {
         runningTasks.decrementAndGet();
         updateProgressBar();
     }

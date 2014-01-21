@@ -29,13 +29,12 @@ import com.google.common.eventbus.Subscribe;
  */
 public class MapController {
     private static final String TAG = "MapController";
-    private static final LatLng LANCASTER_UNIVERSITY = new LatLng(54.0100d, -2.78613d);
+    public static final LatLng LANCASTER_UNIVERSITY = new LatLng(54.0100d, -2.78613d);
     private static final LatLngBounds OVERLAY_BOUNDS = new LatLngBounds(new LatLng(53.9995857817597, -2.82505420938158), new LatLng(54.0184499984692, -2.75295643106126));
     
     private final GoogleMap gmap;
     private final MapOptions options;
     private GroundOverlay overlay;
-    private Marker myLocation;
     
     /**
      * Creates a new controller using the default settings in resources.
@@ -75,7 +74,7 @@ public class MapController {
         gmap.addPolygon(createMapShade()); // Shade out of bounds areas
         
         // Center on Lancaster
-        moveCamera(CameraUpdateFactory.newLatLngZoom(LANCASTER_UNIVERSITY, getStartZoom()));
+        centerOnHome();
     }
     
     protected PolygonOptions createMapShade() {
@@ -88,6 +87,10 @@ public class MapController {
         opt.fillColor(options.colorOutOfBounds);
         opt.strokeWidth(0.0f);
         return opt;
+    }
+    
+    public void centerOnHome() {
+        moveCamera(CameraUpdateFactory.newLatLngZoom(LANCASTER_UNIVERSITY, getStartZoom()));
     }
     
     /**
