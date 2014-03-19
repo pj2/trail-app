@@ -1,5 +1,6 @@
 package uk.co.prenderj.trail.ui;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +22,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
 
 import uk.co.prenderj.trail.R;
+import uk.co.prenderj.trail.activity.MainActivity;
 import uk.co.prenderj.trail.model.Comment;
 import uk.co.prenderj.trail.ui.marker.CommentMarker;
 import uk.co.prenderj.trail.ui.marker.Markable;
@@ -79,9 +81,19 @@ public class MapController implements OnInfoWindowClickListener {
             .positionFromBounds(OVERLAY_BOUNDS)
             .zIndex(1.0f));
         
-        gmap.addPolygon(createMapShade()); // Shade out of bounds areas
-        
         gmap.setOnInfoWindowClickListener(this);
+        
+    
+        final Route route = options.route;
+        MainActivity.getInstance().runOnUiThread(new Runnable() {
+
+            @Override
+            public void run() {
+                gmap.addPolyline(route.getRouteLine());
+                gmap.addPolygon(createMapShade()); // Shade out of bounds areas
+            }
+            
+        });
         
         // Center on Lancaster
         centerOnHome();

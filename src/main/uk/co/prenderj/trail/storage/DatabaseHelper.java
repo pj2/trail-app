@@ -1,5 +1,6 @@
 package uk.co.prenderj.trail.storage;
 
+import uk.co.prenderj.trail.activity.MainActivity;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -13,10 +14,11 @@ import android.util.Log;
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TAG = DatabaseHelper.class.getSimpleName();
     private static final String DATABASE_NAME = "trail.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 3;
     
-    public DatabaseHelper(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    public DatabaseHelper() {
+        super(MainActivity.getInstance(), DATABASE_NAME, null, DATABASE_VERSION);
+        
     }
     @Override
     public void onCreate(SQLiteDatabase db) {

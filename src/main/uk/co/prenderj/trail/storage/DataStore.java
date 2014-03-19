@@ -10,7 +10,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
+import uk.co.prenderj.trail.activity.MainActivity;
 import uk.co.prenderj.trail.model.Comment;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
@@ -21,7 +23,7 @@ import android.database.sqlite.SQLiteStatement;
  */
 public class DataStore {
     private ExecutorService executor = Executors.newFixedThreadPool(2);
-    private DatabaseHelper helper;
+    private DatabaseHelper helper = new DatabaseHelper(); // hack
     
     protected SQLiteDatabase getConnection(boolean write) {
         return write ? helper.getWritableDatabase() : helper.getReadableDatabase();
@@ -40,7 +42,7 @@ public class DataStore {
                 SQLiteDatabase conn = null;
                 try {
                     conn = getConnection(true);
-                    st = conn.compileStatement("INSERT INTO comment (_id, lat, lng, body) VALUES(?, ?, ?, ?)");
+                    st = conn.compileStatement("REPLACE INTO comments (_id, lat, lng, body, attachmentId) VALUES(?, ?, ?, ?, ?)");
                     List<Comment> inserted = Lists.newArrayList();
                     for (Comment comment : comments) {
                         st.bindLong(1, comment.id);
@@ -79,12 +81,12 @@ public class DataStore {
                     StringBuilder params = new StringBuilder();
                     for (int i = 0; i < ids.length; i++) {
                         params.append(i);
-                        if (i == ids.length - 1)
+                        if (i != ids.length - 1)
                             params.append(", ");
                     }
                     
                     conn = getConnection(false);
-                    cursor = conn.query("comment", null, "_id IN (" + params.toString() + ")", null, null, null, null);
+                    cursor = conn.query("comments", null, "_id IN (" + params.toString() + ")", null, null, null, null);
                     
                     List<Comment> out = Lists.newArrayList();
                     while (cursor.moveToNext()) {
@@ -114,7 +116,7 @@ public class DataStore {
                 Cursor cursor = null;
                 try {
                     conn = getConnection(false);
-                    cursor = conn.query("comment", null, null, null, null, null, null);
+                    cursor = conn.query("comments", null, null, null, null, null, null);
                     while (cursor.moveToNext()) {
                         proc.apply(cursor);
                     }

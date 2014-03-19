@@ -1,6 +1,7 @@
 package uk.co.prenderj.trail.activity;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
@@ -18,6 +19,7 @@ import uk.co.prenderj.trail.tasks.TaskManager;
 import uk.co.prenderj.trail.ui.MapController;
 import uk.co.prenderj.trail.ui.MapOptions;
 import uk.co.prenderj.trail.ui.OnCommentWindowClickListener;
+import uk.co.prenderj.trail.ui.Route;
 import uk.co.prenderj.trail.util.Util;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -40,6 +42,7 @@ import android.view.MenuItem;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 import android.content.Intent;
+import android.content.res.Resources.NotFoundException;
 
 /**
  * The main map activity.
@@ -49,10 +52,12 @@ public class MainActivity extends Activity {
     private static final String TAG = "MainActivity";
     private static final int REQUEST_COMMENT = 1;
     
+    private static MainActivity instance;
     private MapController map;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        instance = this;
         super.onCreate(savedInstanceState);
         
         try {
@@ -68,7 +73,15 @@ public class MainActivity extends Activity {
                 Trail.getWebClient().setHostname(new URL(getResources().getString(R.string.server_host)));
                 
                 GoogleMap gmap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
-                map = new MapController(gmap, new MapOptions(R.color.out_of_bounds_fill, R.color.route_color));
+                try {
+                    map = new MapController(gmap, new MapOptions(R.color.out_of_bounds_fill, R.color.route_color, new Route(getResources().getXml(R.xml.test_route_1))));
+                } catch (NotFoundException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                } catch (IOException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
                 
                 map.setOnCommentWindowClickListener(new OnCommentWindowClickListener() {
                     @Override
@@ -88,7 +101,7 @@ public class MainActivity extends Activity {
                 taskManager.setProgressBar((ProgressBar) findViewById(R.id.progress));
                 taskManager.setMap(map);
                 
-                taskManager.loadStoredComments(this);
+                // taskManager.loadStoredComments(this);
                 taskManager.loadNearbyComments(this, tracker.getLastLatLng());
             } else {
                 // Ask the user to activate GPS and exit
@@ -119,6 +132,8 @@ public class MainActivity extends Activity {
     
     @Override
     protected void onDestroy() {
+        instance = null;
+        
         super.onDestroy();
         Trail.getWebClient().close();
     }
@@ -127,7 +142,7 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode != RESULT_OK) return;
         
-        if (resultCode == REQUEST_COMMENT) {
+        if (requestCode == REQUEST_COMMENT) {
             String title = data.getStringExtra("title");
             String body = data.getStringExtra("body");
             String attachmentPath = data.getStringExtra("attachment");
@@ -190,5 +205,9 @@ public class MainActivity extends Activity {
         // Create and show the dialog.
         DialogFragment newFragment = CommentFragment.newInstance(comment);
         newFragment.show(ft, "dialog");
+    }
+    
+    public static MainActivity getInstance() {
+        return instance;
     }
 }
