@@ -24,4 +24,11 @@
         android:text="@string/placeholder"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
+    <Button
+        android:id="@+id/view_attachment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="viewAttachment"
+        android:text="@string/view_attachment" />
+
 </LinearLayout>

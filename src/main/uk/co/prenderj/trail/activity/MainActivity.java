@@ -154,6 +154,9 @@ public class MainActivity extends Activity {
         case R.id.center_on_home:
             centerOnHome();
             break;
+        case R.id.refresh:
+            Trail.getTaskManager().loadNearbyComments(this, Trail.getLocationTracker().getLastLatLng());
+            break;
         }
         return super.onMenuItemSelected(featureId, item);
     }

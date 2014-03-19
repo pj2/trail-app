@@ -7,6 +7,7 @@
         android:visible="true"
         android:enabled="true"
         android:icon="@drawable/ic_menu_content_edit"></item>
+    <item android:id="@+id/refresh" android:title="@string/refresh" android:menuCategory="alternative" android:titleCondensed="@string/refresh" android:icon="@drawable/ic_action_av_replay" android:enabled="true" android:visible="true" android:showAsAction="always"></item>
     
 
 </menu>

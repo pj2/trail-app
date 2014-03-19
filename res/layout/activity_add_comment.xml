@@ -10,7 +10,7 @@
     tools:context=".AddCommentActivity" >
 
     <Button
-        android:id="@+id/button1"
+        android:id="@+id/view_attachment"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/comment_body_field"
@@ -41,7 +41,7 @@
         android:id="@+id/comment_body_field"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/button1"
+        android:layout_above="@+id/view_attachment"
         android:layout_below="@+id/buttons"
         android:layout_centerHorizontal="true"
         android:background="@color/theme_fg"

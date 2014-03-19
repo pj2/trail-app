@@ -24,5 +24,6 @@
     <string name="action_home">Centered on Lancaster</string>
     <string name="view_attachment">View attachment</string>
     <string name="placeholder">...</string>
+    <string name="refresh">Refresh</string>
 
 </resources>

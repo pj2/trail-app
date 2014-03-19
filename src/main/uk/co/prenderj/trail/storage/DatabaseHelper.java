@@ -20,10 +20,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Create comments table with 4 fields
+        // Create comments table with 5 fields
         db.execSQL("CREATE TABLE comments " +
                 "(_id INTEGER PRIMARY KEY, lat DOUBLE NOT NULL," +
-                " lng DOUBLE NOT NULL, body VARCHAR(255), timestamp DATETIME);");
+                " lng DOUBLE NOT NULL, body VARCHAR(255), attachmentId INTEGER);");
     }
 
     @Override

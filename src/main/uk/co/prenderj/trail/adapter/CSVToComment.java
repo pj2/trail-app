@@ -12,6 +12,6 @@ import com.google.common.base.Function;
 public class CSVToComment implements Function<String[], Comment> {
     @Override
     public Comment apply(String[] value) {
-        return new Comment(Long.parseLong(value[0]), new LatLng(Double.parseDouble(value[1]), Double.parseDouble(value[2])), value[3], value[4]);
+        return new Comment(Long.parseLong(value[0]), new LatLng(Double.parseDouble(value[1]), Double.parseDouble(value[2])), value[3], value[4], Long.parseLong(value[5]));
     }
 }

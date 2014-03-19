@@ -47,6 +47,7 @@ public class DataStore {
                         st.bindDouble(2, comment.location.latitude);
                         st.bindDouble(3, comment.location.longitude);
                         st.bindString(4, comment.body);
+                        st.bindLong(5, comment.attachmentId);
                         
                         if (st.executeInsert() != -1) { // Assuming non-unique primary key will force -1
                             inserted.add(comment);
@@ -132,6 +133,7 @@ public class DataStore {
         return new Comment(cursor.getInt(0),
                 new LatLng(cursor.getDouble(1), cursor.getDouble(2)),
                 cursor.getString(3),
-                cursor.getString(4));
+                cursor.getString(4),
+                cursor.getLong(5));
     }
 }
