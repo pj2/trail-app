@@ -12,13 +12,22 @@
         android:layout_gravity="left" />
 
     <ProgressBar
-        android:id="@+id/progressBar"
+        android:id="@+id/progress"
+        style="@android:style/Widget.ProgressBar.Inverse"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|right"
-        android:layout_marginBottom="@dimen/margin_medium"
-        android:layout_marginRight="@dimen/margin_medium"
-        android:visibility="visible"
-        style="@android:style/Widget.ProgressBar.Inverse" />
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/margin_medium"
+        android:visibility="visible" />
+
+    <FrameLayout
+        android:id="@+id/preview"
+        android:layout_width="match_parent"
+        android:layout_height="125dp"
+        android:layout_gravity="bottom"
+        android:layout_marginLeft="@dimen/margin_medium"
+        android:layout_marginRight="@dimen/margin_medium" >
+
+    </FrameLayout>
 
 </FrameLayout>

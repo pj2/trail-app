@@ -14,11 +14,11 @@ import android.graphics.Bitmap.CompressFormat;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Environment;
 
-public class ImageAttachment extends Attachment {
+public class ImageFile extends AttachmentFile {
     private static final String FILE_SUFFIX = ".jpg";
     
-    public ImageAttachment(File source) {
-        super(source);
+    public ImageFile(File source) {
+        super(AttachmentFile.ATTACHMENT_IMAGE, source);
     }
     
     @Override

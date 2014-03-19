@@ -26,11 +26,12 @@ import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import uk.co.prenderj.trail.CommentParams;
+import uk.co.prenderj.trail.model.CommentParams;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
@@ -49,12 +50,13 @@ public class WebClient {
     private HttpClient http = new DefaultHttpClient(); // TODO Use async client
     private HashFunction hashFunction = Hashing.crc32();
     
-    public WebClient(URL hostname) {
-        this.hostname = hostname;
-    }
-    
     public void close() {
         executor.shutdown();
+    }
+    
+    public <T> Future<T> queueTask(Callable<T> callable) {
+        Preconditions.checkNotNull(hostname, "Hostname not set");
+        return executor.submit(callable);
     }
     
     /**
@@ -63,7 +65,7 @@ public class WebClient {
      * @return a Future containing the server's response
      */
     public Future<CommentResponse> uploadComment(final CommentParams params, final File cacheDirectory) {
-        return executor.submit(new Callable<CommentResponse>() {
+        return queueTask(new Callable<CommentResponse>() {
             @Override
             public CommentResponse call() throws Exception {
                 HashCode boundary = hashFunction.hashLong(new Random().nextLong());
@@ -80,9 +82,9 @@ public class WebClient {
                 // Add the compressed attachment if available
                 File compressed = null;
                 try {
-                    if (params.attachment != null) {
-                        compressed = params.attachment.createCompressed(cacheDirectory);
-                        builder.addBinaryBody("attachment", compressed, params.attachment.getContentType(), "attachment" + params.attachment.getFileSuffix());
+                    if (params.attachmentFile != null) {
+                        compressed = params.attachmentFile.createCompressed(cacheDirectory);
+                        builder.addBinaryBody("attachment", compressed, params.attachmentFile.getContentType(), "attachment" + params.attachmentFile.getFileSuffix());
                     }
                     
                     // Build and send
@@ -122,5 +124,13 @@ public class WebClient {
                 }
             }
         });
+    }
+
+    public URL getHostname() {
+        return hostname;
+    }
+
+    public void setHostname(URL hostname) {
+        this.hostname = hostname;
     }
 }

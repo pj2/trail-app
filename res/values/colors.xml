@@ -5,5 +5,6 @@
     <color name="theme_bg">#d7e0df</color>
     <color name="theme_fg">#FFF</color>
     <color name="theme_fg_highlight">#FFF3E6</color>
+    <color name="theme_fg_trans">#E777</color>
     
 </resources>

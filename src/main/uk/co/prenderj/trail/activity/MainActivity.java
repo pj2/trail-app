@@ -1,33 +1,45 @@
 package uk.co.prenderj.trail.activity;
 
-import java.io.IOException;
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import uk.co.prenderj.trail.LocationTracker;
+import uk.co.prenderj.trail.Trail;
+import uk.co.prenderj.trail.model.Comment;
+import uk.co.prenderj.trail.model.CommentParams;
 import uk.co.prenderj.trail.net.WebClient;
+import uk.co.prenderj.trail.net.attachment.AttachmentFile;
+import uk.co.prenderj.trail.storage.DataStore;
 import uk.co.prenderj.trail.tasks.TaskManager;
 import uk.co.prenderj.trail.ui.MapController;
 import uk.co.prenderj.trail.ui.MapOptions;
-import uk.co.prenderj.trail.ui.Route;
+import uk.co.prenderj.trail.ui.OnCommentWindowClickListener;
+import uk.co.prenderj.trail.util.Util;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.Marker;
 
 import uk.co.prenderj.trail.R;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.app.Activity;
-import android.util.Log;
+import android.app.Application;
+import android.app.DialogFragment;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 import android.content.Intent;
-import android.content.res.Resources.NotFoundException;
 
 /**
  * The main map activity.
@@ -35,58 +47,66 @@ import android.content.res.Resources.NotFoundException;
  */
 public class MainActivity extends Activity {
     private static final String TAG = "MainActivity";
-    private static MainActivity instance; // TODO Find a way to replace this
+    private static final int REQUEST_COMMENT = 1;
+    
     private MapController map;
-    private LocationTracker tracker;
-    private WebClient http;
-    private TaskManager taskManager;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        instance = this;
         super.onCreate(savedInstanceState);
         
-        // Start all the services and managers
-        tracker = new LocationTracker((LocationManager) getSystemService(LOCATION_SERVICE));
-        
-        if (tracker.isGpsEnabled()) {
-            setContentView(R.layout.activity_main);
-            
-            tracker.connect();
-            
-            GoogleMap gmap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
-            map = new MapController(gmap, createMapOptions());
-            
-            try {
-                http = new WebClient(new URL(getResources().getString(R.string.server_host)));
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
+        try {
+            // Setup and start components
+            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                setContentView(R.layout.activity_main);
+                
+                LocationTracker tracker = Trail.getLocationTracker();
+                tracker.setLocationManager(locationManager);
+                tracker.connect();
+                
+                Trail.getWebClient().setHostname(new URL(getResources().getString(R.string.server_host)));
+                
+                GoogleMap gmap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
+                map = new MapController(gmap, new MapOptions(R.color.out_of_bounds_fill, R.color.route_color));
+                
+                map.setOnCommentWindowClickListener(new OnCommentWindowClickListener() {
+                    @Override
+                    public void onCommentWindowClick(Marker marker, long commentId) {
+                        try {
+                            Comment comment = Trail.getDataStore().getCommentsById(commentId).get(5, TimeUnit.SECONDS).get(0);
+                            marker.hideInfoWindow();
+                            showCommentDialog(comment);
+                        } catch (Exception e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                
+                TaskManager taskManager = Trail.getTaskManager();
+                taskManager.setProgressBar((ProgressBar) findViewById(R.id.progress));
+                taskManager.setMap(map);
+                
+                taskManager.loadStoredComments(this);
+                taskManager.loadNearbyComments(this, tracker.getLastLatLng());
+            } else {
+                // Ask the user to activate GPS and exit
+                Toast.makeText(this, R.string.activate_gps, Toast.LENGTH_LONG).show();
+                startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                finish();
             }
-            
-            taskManager = new TaskManager(map, http, (ProgressBar) findViewById(R.id.progressBar), getCacheDir());
-            taskManager.loadNearbyComments(tracker.getLastLatLng());
-        } else {
-            // Ask the user to activate GPS and exit
-            Toast.makeText(this, R.string.activate_gps, Toast.LENGTH_LONG).show();
-            startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-            finish();
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
         }
-    }
-    
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present
-        getMenuInflater().inflate(R.menu.main, menu);
-        return super.onCreateOptionsMenu(menu);
     }
     
     @Override
     protected void onResume() {
         super.onResume();
         
-        checkPlayServices();
-        
-        tracker.connect();
+        Util.checkPlayServices(this);
+        Trail.getLocationTracker().connect();
     }
     
     @Override
@@ -94,14 +114,35 @@ public class MainActivity extends Activity {
         super.onPause();
         
         // Turn off some components to save battery
-        tracker.disconnect();
+        Trail.getLocationTracker().disconnect();
     }
     
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Trail.getWebClient().close();
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode != RESULT_OK) return;
         
-        http.close();
+        if (resultCode == REQUEST_COMMENT) {
+            String title = data.getStringExtra("title");
+            String body = data.getStringExtra("body");
+            String attachmentPath = data.getStringExtra("attachment");
+            
+            AttachmentFile attachmentFile = null;
+            if (attachmentPath != null) {
+                int attachmentType = data.getIntExtra("attachmentType", -1);
+                attachmentFile = AttachmentFile.newInstance(new File(attachmentPath), attachmentType);
+            }
+            
+            Trail.getTaskManager().addComment(this, new CommentParams(Trail.getLocationTracker().getLastLatLng(),
+                    title,
+                    body,
+                    attachmentFile), getCacheDir());
+        }
     }
     
     @Override
@@ -111,55 +152,40 @@ public class MainActivity extends Activity {
             startAddCommentActivity();
             break;
         case R.id.center_on_home:
-            map.centerOnHome();
+            centerOnHome();
             break;
         }
         return super.onMenuItemSelected(featureId, item);
     }
     
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+    
     /**
      * Starts the comment add form when the action is pressed.
      */
-    protected void startAddCommentActivity() {
-        startActivity(new Intent(this, AddCommentActivity.class));
+    public void startAddCommentActivity() {
+        startActivityForResult(new Intent(this, AddCommentActivity.class), REQUEST_COMMENT);
     }
     
-    protected void checkPlayServices() {
-        // TODO Move
-        // TODO Display prompt to download Services
-        int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
-        Log.i(TAG, "GPlayServices: status = " + status + ", success = " + (status == ConnectionResult.SUCCESS));
+    public void centerOnHome() {
+        map.centerOnHome();
+        Toast.makeText(this, R.string.action_home, Toast.LENGTH_SHORT).show();
     }
     
-    protected MapOptions createMapOptions() {
-        try {
-            return new MapOptions(R.color.out_of_bounds_fill, R.color.route_color, new Route(getResources().getXml(R.xml.test_route_1)));
-        } catch (NotFoundException e) {
-            Log.e(TAG, "Couldn't find default route", e);
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            Log.e(TAG, "Failed to load default route", e);
-            throw new RuntimeException(e);
+    public void showCommentDialog(Comment comment) {
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+        if (prev != null) {
+            ft.remove(prev);
         }
-    }
-    
-    public MapController getMap() {
-        return map;
-    }
-    
-    public LocationTracker getLocationTracker() {
-        return tracker;
-    }
-    
-    public WebClient getClient() {
-        return http;
-    }
-    
-    public TaskManager getCommentManager() {
-        return taskManager;
-    }
-    
-    public static MainActivity instance() {
-        return instance;
+        ft.addToBackStack(null);
+
+        // Create and show the dialog.
+        DialogFragment newFragment = CommentFragment.newInstance(comment);
+        newFragment.show(ft, "dialog");
     }
 }

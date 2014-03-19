@@ -3,17 +3,22 @@ package uk.co.prenderj.trail.activity;
 import java.io.File;
 import java.io.IOException;
 
-import uk.co.prenderj.trail.CommentParams;
 import uk.co.prenderj.trail.R;
-import uk.co.prenderj.trail.net.attachment.Attachment;
-import uk.co.prenderj.trail.net.attachment.ImageAttachment;
+import uk.co.prenderj.trail.Trail;
+import uk.co.prenderj.trail.model.CommentParams;
+import uk.co.prenderj.trail.net.attachment.AttachmentFile;
+import uk.co.prenderj.trail.net.attachment.AudioFile;
+import uk.co.prenderj.trail.net.attachment.ImageFile;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.app.Activity;
+import android.app.LoaderManager;
+import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,8 +31,8 @@ public class AddCommentActivity extends Activity {
     private static final int REQUEST_AUDIO_CAPTURE = 2;
     private static final String TAG = "AddCommentActivity";
     
-    private Attachment attachment;
     private File attachmentSource;
+    private int attachmentType = -1;
     
     private EditText titleBox;
     private EditText bodyBox;
@@ -49,16 +54,9 @@ public class AddCommentActivity extends Activity {
     }
     
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if ((attachmentSource != null && !attachmentSource.delete())) {
-            Log.e(TAG, "Failed to delete unfinished file");
-        }
-    }
-    
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
+            setResult(RESULT_CANCELED);
             finish();
         }
         return super.onOptionsItemSelected(item);
@@ -68,12 +66,12 @@ public class AddCommentActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode != RESULT_OK) return;
         
-        if (requestCode == REQUEST_IMAGE_CAPTURE) {
-            attachment = new ImageAttachment(attachmentSource);
+        if (requestCode == REQUEST_AUDIO_CAPTURE) {
+            attachmentSource = new File(getPath(data.getData()));
+            attachmentType = AttachmentFile.ATTACHMENT_AUDIO;
         } else {
-            // TODO Audio attachment
+            attachmentType = AttachmentFile.ATTACHMENT_IMAGE;
         }
-        attachmentSource = null; // Do not delete in onDestroy
         Toast.makeText(this, R.string.attachment_added, Toast.LENGTH_SHORT).show();
     }
     
@@ -90,11 +88,12 @@ public class AddCommentActivity extends Activity {
                 
                 request = REQUEST_IMAGE_CAPTURE;
                 intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                attachmentSource = ImageAttachment.createSourceFile();
+                attachmentSource = ImageFile.createSourceFile();
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(attachmentSource));
             } else {
-                // TODO Microphone
-                throw new IllegalStateException("Microphone not yet implemented");
+                request = REQUEST_AUDIO_CAPTURE;
+                intent = new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
+                intent.putExtra(MediaStore.Audio.Media.EXTRA_MAX_BYTES, 1024 * 512); // TODO
             }
         
             if (intent.resolveActivity(getPackageManager()) != null) { // Check there is a handling activity available
@@ -118,10 +117,17 @@ public class AddCommentActivity extends Activity {
         if (title.isEmpty() || body.isEmpty()) {
             Toast.makeText(this, R.string.missing_argument, Toast.LENGTH_SHORT).show();
         } else {
-            // Ensure the attachment was written to by another activity (e.g. camera)
-            CommentParams params = new CommentParams(MainActivity.instance().getLocationTracker().getLastLatLng(), title, body, attachment);
+            Intent returnIntent = new Intent();
+            returnIntent.putExtra("title", title);
+            returnIntent.putExtra("body", body);
             
-            MainActivity.instance().getCommentManager().addComment(params);
+            // Check if the attachment was successfully created
+            if (attachmentType != -1) {
+                returnIntent.putExtra("attachment", attachmentSource.getAbsolutePath());
+                returnIntent.putExtra("attachmentType", attachmentType);
+            }
+            
+            setResult(RESULT_OK, returnIntent);
             finish();
         }
     }
@@ -130,5 +136,15 @@ public class AddCommentActivity extends Activity {
         // Check we can actually take pictures
         return getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)
                 && Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
+    }
+    
+    private String getPath(Uri uri) {
+        String[] projection = { MediaStore.Audio.Media.DATA };
+        CursorLoader loader = new CursorLoader(this, uri, projection, null, null, null);
+        Cursor cursor = loader.loadInBackground();
+        
+        int column = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column);
     }
 }

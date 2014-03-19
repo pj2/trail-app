@@ -25,25 +25,14 @@ public class Route {
         load(gpx);
     }
     
-    protected PolylineOptions createOptions() {
-        return new PolylineOptions().color(R.color.route_color).zIndex(2.0f);
-    }
-    
     protected void load(XmlResourceParser gpx) throws IOException {
-        if (opt != null) return; // Load once
         try {
             opt = createOptions();
             int eventType = -1;
             while ((eventType = gpx.next()) != XmlPullParser.END_DOCUMENT) {
                 // Assume there is just one route in the file
                 if (eventType == XmlPullParser.START_TAG && gpx.getName().equals("trkpt")) {
-                    if (gpx.getAttributeCount() == 2) {
-                        float lat = gpx.getAttributeFloatValue(0, 0.0f);
-                        float lon = gpx.getAttributeFloatValue(1, 0.0f);
-                        opt.add(new LatLng(lat, lon));
-                    } else {
-                        Log.w(TAG, "trkpt has invalid attribute count, ignoring");
-                    }
+                    readPoint(gpx);
                 }
             }
         } catch (XmlPullParserException e) {
@@ -53,8 +42,22 @@ public class Route {
             gpx.close();
         }
     }
+
+    private void readPoint(XmlResourceParser gpx) {
+        if (gpx.getAttributeCount() == 2) {
+            float lat = gpx.getAttributeFloatValue(0, 0.0f);
+            float lon = gpx.getAttributeFloatValue(1, 0.0f);
+            opt.add(new LatLng(lat, lon));
+        } else {
+            Log.w(TAG, "trkpt has invalid attribute count, ignoring");
+        }
+    }
     
-    public void attach(GoogleMap gmap) {
-        gmap.addPolyline(opt);
+    protected PolylineOptions createOptions() {
+        return new PolylineOptions().color(R.color.route_color);
+    }
+    
+    public PolylineOptions getRouteLine() {
+        return opt;
     }
 }

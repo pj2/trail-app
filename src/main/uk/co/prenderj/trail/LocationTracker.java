@@ -1,6 +1,5 @@
 package uk.co.prenderj.trail;
 
-import uk.co.prenderj.trail.event.LocationChangedEvent;
 import uk.co.prenderj.trail.ui.MapController;
 import android.location.Location;
 import android.location.LocationListener;
@@ -9,7 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.google.common.eventbus.EventBus;
+import com.google.common.base.Preconditions;
 
 /**
  * Gathers GPS location data every 5 seconds.
@@ -17,18 +16,12 @@ import com.google.common.eventbus.EventBus;
  */
 public class LocationTracker implements LocationListener {
     private static final String TAG = "LocationTracker";
-    private EventBus eventBus = new EventBus(TAG);
     private LocationManager locationManager;
     private Location lastLocation;
-    
-    public LocationTracker(LocationManager locationManager) {
-        this.locationManager = locationManager;
-    }
     
     @Override
     public void onLocationChanged(Location loc) {
         lastLocation = loc;
-        eventBus.post(new LocationChangedEvent(loc));
     }
     
     @Override
@@ -47,20 +40,17 @@ public class LocationTracker implements LocationListener {
     }
     
     public void connect() {
-        lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Preconditions.checkNotNull(locationManager);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, this);
+        lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
     }
     
     public void disconnect() {
         locationManager.removeUpdates(this);
     }
     
-    public boolean isGpsEnabled() {
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-    }
-    
-    public void registerListener(Object o) {
-        eventBus.register(o);
+    public void setLocationManager(LocationManager locationManager) {
+        this.locationManager = locationManager;
     }
     
     public LocationManager getLocationManager() {

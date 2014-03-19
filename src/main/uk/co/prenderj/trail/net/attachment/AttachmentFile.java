@@ -18,7 +18,11 @@ import android.os.Environment;
  * A file attached to a comment.
  * @author Joshua Prendergast
  */
-public abstract class Attachment {
+public abstract class AttachmentFile {
+    public static final int ATTACHMENT_AUDIO = 1;
+    public static final int ATTACHMENT_IMAGE = 2;
+    
+    private int type;
     private File source;
     
     public abstract File createCompressed(File directory) throws IOException;
@@ -27,8 +31,9 @@ public abstract class Attachment {
     
     public abstract String getFileSuffix();
     
-    public Attachment(File source) {
+    public AttachmentFile(int type, File source) {
         this.source = source;
+        this.type = type;
     }
     
     public void delete() throws IOException {
@@ -37,7 +42,22 @@ public abstract class Attachment {
         }
     }
     
+    public static AttachmentFile newInstance(File source, int type) {
+        switch (type){
+        case ATTACHMENT_AUDIO:
+            return new AudioFile(source);
+        case ATTACHMENT_IMAGE:
+            return new ImageFile(source);
+        default:
+            throw new AssertionError();
+        }
+    }
+    
     public File getSourceFile() {
         return source;
+    }
+    
+    public int getType() {
+        return type;
     }
 }

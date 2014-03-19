@@ -9,5 +9,6 @@
     <dimen name="margin_small">2dp</dimen>
     <dimen name="padding_tiny">1dp</dimen>
     <dimen name="padding_large">7dp</dimen>
+    <dimen name="margin_large">10dp</dimen>
 
 </resources>

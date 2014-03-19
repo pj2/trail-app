@@ -1,12 +1,14 @@
 package uk.co.prenderj.trail.model;
 
+import java.io.Serializable;
+
 import com.google.android.gms.maps.model.LatLng;
 
 /**
  * A user's comment.
  * @author Joshua Prendergast
  */
-public class Comment {
+public class Comment implements Serializable {
     public final long id;
     public final LatLng location;
     public final String title;

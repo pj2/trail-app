@@ -1,11 +1,15 @@
 package uk.co.prenderj.trail.ui;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.CancelableCallback;
+import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
@@ -17,17 +21,18 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
 
 import uk.co.prenderj.trail.R;
-import uk.co.prenderj.trail.event.LocationChangedEvent;
+import uk.co.prenderj.trail.model.Comment;
+import uk.co.prenderj.trail.ui.marker.CommentMarker;
 import uk.co.prenderj.trail.ui.marker.Markable;
 
 import com.google.android.gms.maps.model.Marker;
-import com.google.common.eventbus.Subscribe;
+import com.google.common.base.Preconditions;
 
 /**
  * Maintains and controls the main MapView.
  * @author Joshua Prendergast
  */
-public class MapController {
+public class MapController implements OnInfoWindowClickListener {
     private static final String TAG = "MapController";
     public static final LatLng LANCASTER_UNIVERSITY = new LatLng(54.0100d, -2.78613d);
     private static final LatLngBounds OVERLAY_BOUNDS = new LatLngBounds(new LatLng(53.9995857817597, -2.82505420938158), new LatLng(54.0184499984692, -2.75295643106126));
@@ -35,6 +40,10 @@ public class MapController {
     private final GoogleMap gmap;
     private final MapOptions options;
     private GroundOverlay overlay;
+    
+    private OnCommentWindowClickListener listener;
+    
+    private Map<String, Long> markerObjects = new HashMap<String, Long>();
     
     /**
      * Creates a new controller using the default settings in resources.
@@ -47,7 +56,7 @@ public class MapController {
         }
         
         this.gmap = gmap;
-        this.options = options; // TODO Move from constructor into separate method
+        this.options = options;
         setupMap();
     }
     
@@ -64,17 +73,46 @@ public class MapController {
         ui.setMyLocationButtonEnabled(true);
         ui.setZoomControlsEnabled(false);
         
-        // Add overlays
+        // Add custom map overlay
         overlay = gmap.addGroundOverlay(new GroundOverlayOptions()
             .image(BitmapDescriptorFactory.fromResource(R.drawable.map_overlay))
             .positionFromBounds(OVERLAY_BOUNDS)
             .zIndex(1.0f));
         
-        options.route.attach(gmap);
         gmap.addPolygon(createMapShade()); // Shade out of bounds areas
+        
+        gmap.setOnInfoWindowClickListener(this);
         
         // Center on Lancaster
         centerOnHome();
+    }
+    
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        if (listener != null) {
+            Long commentId = markerObjects.get(marker.getId());
+            Preconditions.checkNotNull(commentId);
+            listener.onCommentWindowClick(marker, commentId);
+        }
+    }
+    
+    /**
+     * Places a marker on the map.
+     * @param markable the markable object
+     */
+    public Marker addMarkable(Markable markable) {
+        MarkerOptions opt = new MarkerOptions();
+        markable.mark(opt); // Allow object to adjust marker
+        
+        Log.v(TAG, String.format("Adding marker: pos = %s, title = %s", opt.getPosition(), opt.getTitle()));
+        return gmap.addMarker(opt);
+    }
+    
+    public Marker addMarkable(CommentMarker markable) {
+        // Store an association between marker and comment for later viewing
+        Marker m = addMarkable((Markable) markable);
+        markerObjects.put(m.getId(), markable.getComment().id);
+        return m;
     }
     
     protected PolygonOptions createMapShade() {
@@ -89,20 +127,12 @@ public class MapController {
         return opt;
     }
     
-    public void centerOnHome() {
-        moveCamera(CameraUpdateFactory.newLatLngZoom(LANCASTER_UNIVERSITY, getStartZoom()));
+    public void attachRoute(Route route) {
+        gmap.addPolyline(route.getRouteLine().zIndex(2.0f));
     }
     
-    /**
-     * Places a marker on the map.
-     * @param markable the markable object
-     */
-    public Marker addMarkable(Markable markable) {
-        MarkerOptions opt = new MarkerOptions();
-        markable.mark(opt); // Allow object to adjust marker
-        
-        Log.v(TAG, String.format("Adding marker: pos = %s, title = %s", opt.getPosition(), opt.getTitle()));
-        return gmap.addMarker(opt);
+    public void centerOnHome() {
+        moveCamera(CameraUpdateFactory.newLatLngZoom(LANCASTER_UNIVERSITY, getStartZoom()));
     }
     
     public int getStartZoom() {
@@ -131,5 +161,9 @@ public class MapController {
     
     public final void moveCamera(CameraUpdate update) {
         gmap.moveCamera(update);
+    }
+
+    public void setOnCommentWindowClickListener(OnCommentWindowClickListener listener) {
+        this.listener = listener;
     }
 }

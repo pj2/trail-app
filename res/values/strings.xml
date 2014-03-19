@@ -21,5 +21,8 @@
     <string name="missing_argument">Please fill in all fields</string>
     <string name="io_error">Problem writing to disk</string>
     <string name="attachment_added">Attachment added</string>
+    <string name="action_home">Centered on Lancaster</string>
+    <string name="view_attachment">View attachment</string>
+    <string name="placeholder">...</string>
 
 </resources>

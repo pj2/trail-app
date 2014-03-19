@@ -1,6 +1,6 @@
-package uk.co.prenderj.trail;
+package uk.co.prenderj.trail.model;
 
-import uk.co.prenderj.trail.net.attachment.Attachment;
+import uk.co.prenderj.trail.net.attachment.AttachmentFile;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -12,7 +12,7 @@ public class CommentParams {
     public final LatLng position;
     public final String title;
     public final String body;
-    public final Attachment attachment;
+    public final AttachmentFile attachmentFile;
     
     /**
      * Creates a comment request without an attachment.
@@ -24,7 +24,7 @@ public class CommentParams {
         this.position = position;
         this.title = title;
         this.body = body;
-        this.attachment = null;
+        this.attachmentFile = null;
     }
     
     /**
@@ -32,12 +32,12 @@ public class CommentParams {
      * @param position the position
      * @param title the title
      * @param body the comment content
-     * @param attachment the attachment
+     * @param attachmentFile the attachment
      */
-    public CommentParams(LatLng position, String title, String body, Attachment attachment) {
+    public CommentParams(LatLng position, String title, String body, AttachmentFile attachmentFile) {
         this.position = position;
         this.title = title;
         this.body = body;
-        this.attachment = attachment;
+        this.attachmentFile = attachmentFile;
     }
 }

@@ -4,15 +4,18 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.ProgressBar;
 
 import com.google.android.gms.maps.model.LatLng;
 
-import uk.co.prenderj.trail.CommentParams;
+import uk.co.prenderj.trail.Trail;
 import uk.co.prenderj.trail.model.Comment;
-import uk.co.prenderj.trail.net.WebClient;
+import uk.co.prenderj.trail.model.CommentParams;
 import uk.co.prenderj.trail.ui.MapController;
 
 /**
@@ -21,25 +24,22 @@ import uk.co.prenderj.trail.ui.MapController;
  */
 public class TaskManager {
     private static final String TAG = "TaskManager";
-    private File cacheDirectory;
+    
+    private Handler uiHandler = new Handler(Looper.getMainLooper());
     private MapController map;
-    private WebClient client;
     private ProgressBar bar;
     private AtomicInteger runningTasks = new AtomicInteger();
     
-    public TaskManager(MapController map, WebClient client, ProgressBar progressBar, File cacheDirectory) {
-        this.map = map;
-        this.client = client;
-        this.bar = progressBar;
-        this.cacheDirectory = cacheDirectory;
+    public AsyncTask<CommentParams, Void, Comment> addComment(Context caller, CommentParams params, File cacheDir) {
+        return startTask(new AddCommentTask(this, caller, cacheDir), params);
     }
     
-    public AsyncTask<CommentParams, Void, Comment> addComment(CommentParams params) {
-        return startTask(new AddCommentTask(this, client, map, cacheDirectory), params);
+    public AsyncTask<LatLng, Void, List<Comment>> loadNearbyComments(Context caller, LatLng pos) {
+        return startTask(new LoadNearbyCommentsTask(this, caller), pos);
     }
     
-    public AsyncTask<LatLng, Void, List<Comment>> loadNearbyComments(LatLng pos) {
-        return startTask(new LoadNearbyCommentsTask(this, client, map), pos);
+    public AsyncTask<Void, Void, Void> loadStoredComments(Context caller) {
+        return startTask(new LoadStoredCommentsTask(this, caller));
     }
     
     /**
@@ -47,7 +47,9 @@ public class TaskManager {
      * Must be called on the UI thread.
      */
     protected void updateProgressBar() {
-        bar.setVisibility(isBusy() ? View.VISIBLE : View.INVISIBLE);
+        if (bar != null) {
+            bar.setVisibility(isBusy() ? View.VISIBLE : View.INVISIBLE);
+        }
     }
     
     /**
@@ -77,5 +79,25 @@ public class TaskManager {
      */
     public boolean isBusy() {
         return runningTasks.get() > 0;
+    }
+
+    public ProgressBar getProgressBar() {
+        return bar;
+    }
+
+    public void setProgressBar(ProgressBar bar) {
+        this.bar = bar;
+    }
+
+    public MapController getMap() {
+        return map;
+    }
+
+    public void setMap(MapController map) {
+        this.map = map;
+    }
+    
+    public Handler getUiHandler() {
+        return uiHandler;
     }
 }

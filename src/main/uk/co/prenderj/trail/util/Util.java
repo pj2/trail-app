@@ -1,9 +1,14 @@
 package uk.co.prenderj.trail.util;
 
+import android.content.Context;
+import android.util.Log;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 
-public class MathUtil {
+public class Util {
     /**
      * Ensures that a LatLng is contained within the given bounds.
      * @param latLng the LatLng
@@ -61,5 +66,11 @@ public class MathUtil {
                 * Math.sin(dLng / 2) * Math.sin(dLng / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return r * c;
+    }
+    
+    public static void checkPlayServices(Context ctx) {
+        // TODO Display prompt to download Services
+        int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(ctx);
+        Log.i(ctx.getPackageName(), "GPlayServices: status = " + status + ", success = " + (status == ConnectionResult.SUCCESS));
     }
 }
